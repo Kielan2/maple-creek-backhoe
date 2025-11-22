@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maple Creek Backhoe Services</title>
+    <meta name="description" content="Maple Creek Backhoe offers professional excavation, hauling, and site preparation services. Reliable and experienced.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+</head>
+<body>
+
+    <header id="main-header">
+        <div class="container">
+            <div class="logo">
+                <img src="images/mcb-logo.png" alt="Maple Creek Backhoe">
+            </div>
+            <nav id="main-nav">
+                <ul>
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="drivers.html" class="btn-nav">Driver</a></li>
+                    <li><a href="#contact" class="btn-nav">Contact Us</a></li>
+                </ul>
+            </nav>
+            <div class="mobile-menu-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="hero">
+            <div class="hero-content">
+                <h1>Maple Creek Backhoe Service</h1>
+                <p>Selling and Hauling of Aggregates such as Sand, Top Soil, Compost, Gravel, Rock, Slag, Landscape Boulders</p>
+                <a href="#contact" class="btn-primary">Get a Quote</a>
+            </div>
+        </section>
+
+        <!-- Services Section -->
+        <section id="services">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Our Services</h2>
+                    <p>We provide a wide range of excavation and hauling solutions.</p>
+                </div>
+                <div class="services-grid">
+                    <!-- Service items will go here -->
+                    <div class="service-card">
+                        <div class="icon">🚜</div>
+                        <h3>Excavation</h3>
+                        <p>Precision digging for foundations, trenches, and more.</p>
+                    </div>
+                    <div class="service-card">
+                        <div class="icon">🚛</div>
+                        <h3>Hauling</h3>
+                        <p>Transporting dirt, gravel, and debris efficiently.</p>
+                    </div>
+                    <div class="service-card">
+                        <div class="icon">🏗️</div>
+                        <h3>Site Preparation</h3>
+                        <p>Clearing and grading land for construction projects.</p>
+                    </div>
+                    <div class="service-card">
+                        <div class="icon">💧</div>
+                        <h3>Drainage Solutions</h3>
+                        <p>Installing culverts and managing water flow.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about">
+            <div class="container">
+                <div class="about-content">
+                    <div class="about-text">
+                        <h2>About Maple Creek Backhoe</h2>
+                        <p>If your looking for landscaping or just need landscaping products from boulders ,topsoil, gravel give us a call and we can help you achieve all your landscaping needs.</p>
+                        <h3>Servicing the following areas:</h3>
+                        <ul>
+                            <li>Box Elder County, UT</li>
+                            <li>Oneida County, ID</li>
+                            <li>Weber County, UT</li>
+                            <li>Bear Lake County, ID</li>
+                            <li>Cache County, UT</li>
+                            <li>Franklin County, ID</li>
+                            <li>Caribou County, ID</li>
+                        </ul>
+                    </div>
+                    <div class="about-image">
+                        <div class="img-placeholder"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Contact Us</h2>
+                    <p>Ready to start your project? Get in touch with us today.</p>
+                </div>
+                <div class="contact-wrapper">
+                    <div class="contact-info">
+                        <div class="info-item">
+                            <i class="fas fa-phone"></i>
+                            <p>(208) 380-9359</p>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-envelope"></i>
+                            <p>maplecreekbackhoe64@gmail.com</p>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <p>2300 South 800 West, Preston, ID</p>
+                        </div>
+                    </div>
+                    <form id="contact-form">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Message</label>
+                            <textarea id="message" name="message" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; <span id="current-year"></span> Maple Creek Backhoe. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

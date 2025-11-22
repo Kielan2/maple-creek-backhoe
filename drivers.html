@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Time Card - Maple Creek Backhoe Services</title>
+    <meta name="description" content="Employee Time Card submission for Maple Creek Backhoe drivers.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+</head>
+<body>
+
+    <header id="main-header">
+        <div class="container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="images/mcb-logo.png" alt="Maple Creek Backhoe">
+                </a>
+            </div>
+            <nav id="main-nav">
+                <ul>
+                    <li><a href="index.html#services">Services</a></li>
+                    <li><a href="index.html#about">About</a></li>
+                    <li><a href="drivers.html" class="btn-nav active">Driver</a></li>
+                    <li><a href="index.html#contact" class="btn-nav">Contact Us</a></li>
+                </ul>
+            </nav>
+            <div class="mobile-menu-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="driver-page" class="page-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Employee Time Card</h2>
+                    <p>Please fill out your daily work log accurately.</p>
+                </div>
+
+                <form id="time-card-form" class="styled-form">
+                    <!-- Employee Details -->
+                    <div class="form-section">
+                        <h3>Employee Details</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="employee-name">Employee Name</label>
+                                <input type="text" id="employee-name" name="employee_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="date">Date</label>
+                                <input type="date" id="date" name="date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="day-of-week">Day of Week</label>
+                                <select id="day-of-week" name="day_of_week" required>
+                                    <option value="">Select Day</option>
+                                    <option value="Monday">Monday</option>
+                                    <option value="Tuesday">Tuesday</option>
+                                    <option value="Wednesday">Wednesday</option>
+                                    <option value="Thursday">Thursday</option>
+                                    <option value="Friday">Friday</option>
+                                    <option value="Saturday">Saturday</option>
+                                    <option value="Sunday">Sunday</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Work Log -->
+                    <div class="form-section">
+                        <h3>Daily Work Log</h3>
+                        <div class="table-responsive">
+                            <table id="work-log-table">
+                                <thead>
+                                    <tr>
+                                        <th>From/Load Time</th>
+                                        <th>To/Del. Time</th>
+                                        <th>Truck/Equip #</th>
+                                        <th># of Loads</th>
+                                        <th>Unit of Meas.</th>
+                                        <th>Material Type</th>
+                                        <th>Source/Supplier</th>
+                                        <th>Job Name/Desc.</th>
+                                        <th>Job #/Phase #</th>
+                                        <th>Hours</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="time" name="load_time[]"></td>
+                                        <td><input type="time" name="del_time[]"></td>
+                                        <td><input type="text" name="truck_equip[]"></td>
+                                        <td><input type="number" name="num_loads[]" step="0.5"></td>
+                                        <td><input type="text" name="unit_meas[]"></td>
+                                        <td><input type="text" name="material_type[]"></td>
+                                        <td><input type="text" name="source_supplier[]"></td>
+                                        <td><input type="text" name="job_desc[]"></td>
+                                        <td><input type="text" name="job_num[]"></td>
+                                        <td><input type="number" name="job_hours[]" step="0.25"></td>
+                                        <td><button type="button" class="btn-remove-row"><i class="fas fa-trash"></i></button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <button type="button" id="add-row-btn" class="btn-secondary"><i class="fas fa-plus"></i> Add Row</button>
+                    </div>
+
+                    <!-- Truck/Tractor Info -->
+                    <div class="form-section">
+                        <h3>Truck / Tractor Info</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="equipment-num">Equipment #</label>
+                                <input type="text" id="equipment-num" name="equipment_num">
+                            </div>
+                            <div class="form-group">
+                                <label for="beg-miles">Beg-Miles/Hrs</label>
+                                <input type="number" id="beg-miles" name="beg_miles" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label for="end-miles">End-Miles/Hrs</label>
+                                <input type="number" id="end-miles" name="end_miles" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label for="total-miles">Total Miles</label>
+                                <input type="number" id="total-miles" name="total_miles" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="fuel-gallons">Fuel Gallons</label>
+                                <input type="number" id="fuel-gallons" name="fuel_gallons" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Safety & Sign-off -->
+                    <div class="form-section">
+                        <h3>Safety & Sign-off</h3>
+                        <div class="form-group">
+                            <label>Were you injured on the job today?</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="injured" value="yes"> Yes</label>
+                                <label><input type="radio" name="injured" value="no" checked> No</label>
+                            </div>
+                        </div>
+                        <div class="form-group hidden" id="injury-details-group">
+                            <label for="injury-details">If YES, describe the injury and/or accident:</label>
+                            <textarea id="injury-details" name="injury_details" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="signature">Employee Signature</label>
+                            <input type="text" id="signature" name="signature" placeholder="Type full name to sign" required>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary btn-large">Submit Time Card</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; <span id="current-year"></span> Maple Creek Backhoe. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="main.js"></script>
+    <script>
+        // Simple script for the form interactions
+        $(document).ready(function() {
+            // Add Row
+            $('#add-row-btn').click(function() {
+                const newRow = `
+                    <tr>
+                        <td><input type="time" name="load_time[]"></td>
+                        <td><input type="time" name="del_time[]"></td>
+                        <td><input type="text" name="truck_equip[]"></td>
+                        <td><input type="number" name="num_loads[]" step="0.5"></td>
+                        <td><input type="text" name="unit_meas[]"></td>
+                        <td><input type="text" name="material_type[]"></td>
+                        <td><input type="text" name="source_supplier[]"></td>
+                        <td><input type="text" name="job_desc[]"></td>
+                        <td><input type="text" name="job_num[]"></td>
+                        <td><input type="number" name="job_hours[]" step="0.25"></td>
+                        <td><button type="button" class="btn-remove-row"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                `;
+                $('#work-log-table tbody').append(newRow);
+            });
+
+            // Remove Row
+            $(document).on('click', '.btn-remove-row', function() {
+                $(this).closest('tr').remove();
+            });
+
+            // Calculate Total Miles
+            $('#end-miles, #beg-miles').on('input', function() {
+                const start = parseFloat($('#beg-miles').val()) || 0;
+                const end = parseFloat($('#end-miles').val()) || 0;
+                if (end > start) {
+                    $('#total-miles').val((end - start).toFixed(1));
+                } else {
+                    $('#total-miles').val('');
+                }
+            });
+
+            // Show/Hide Injury Details
+            $('input[name="injured"]').change(function() {
+                if ($(this).val() === 'yes') {
+                    $('#injury-details-group').removeClass('hidden');
+                } else {
+                    $('#injury-details-group').addClass('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
