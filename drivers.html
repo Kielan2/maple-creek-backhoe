@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Driver Time Card - Maple Creek Backhoe Services</title>
     <meta name="description" content="Employee Time Card submission for Maple Creek Backhoe drivers.">
+    <meta name="robots" content="noindex, nofollow">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
@@ -16,30 +17,43 @@
 <body>
 
     <header id="main-header">
-        <div class="container">
+        <div class="container driver-header">
             <div class="logo">
                 <a href="index.html">
                     <img src="images/mcb-logo.png" alt="Maple Creek Backhoe">
                 </a>
             </div>
-            <nav id="main-nav">
-                <ul>
-                    <li><a href="index.html#services">Services</a></li>
-                    <li><a href="index.html#about">About</a></li>
-                    <li><a href="drivers.html" class="btn-nav active">Driver</a></li>
-                    <li><a href="index.html#contact" class="btn-nav">Contact Us</a></li>
-                </ul>
-            </nav>
-            <div class="mobile-menu-toggle">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-            </div>
+            
         </div>
     </header>
 
     <main>
-        <section id="driver-page" class="page-section">
+        <!-- Password Gate Section -->
+        <section id="password-gate" class="page-section">
+            <div class="container">
+                <div class="login-container" style="max-width: 400px; margin: 0 auto; text-align: center; padding: 40px 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <i class="fas fa-lock" style="font-size: 3rem; color: #333; margin-bottom: 20px;"></i>
+                    <h2 style="margin-bottom: 20px;">Driver Access</h2>
+                    <div id="login-loading" style="margin-bottom: 20px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+                        <p>Loading employee data...</p>
+                    </div>
+                    <div id="login-form" style="display: none;">
+                        <p style="margin-bottom: 20px;">Select your name and enter your password.</p>
+                        <div class="form-group">
+                            <select id="driver-select" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px; font-size: 16px; background: #fff;">
+                                <option value="">Select Employee</option>
+                            </select>
+                            <input type="password" id="driver-password" placeholder="Enter Password" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px; font-size: 16px;">
+                            <p id="password-error" style="color: #dc3545; display: none; margin-bottom: 15px;">Incorrect password. Please try again.</p>
+                            <button id="btn-login" class="btn-primary" style="width: 100%; justify-content: center;">Access Page</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="driver-page" class="page-section" style="display: none;">
             <div class="container">
                 <div class="section-header">
                     <h2>Employee Time Card</h2>
@@ -225,6 +239,306 @@
                 } else {
                     $('#injury-details-group').addClass('hidden');
                 }
+            });
+
+            // ============================================
+            // PASSWORD PROTECTION - GOOGLE SHEETS SETUP
+            // ============================================
+            // IMPORTANT: Replace the URL below with your Google Apps Script Web App URL
+            // 
+            // To set up:
+            // 1. Create a Google Sheet with columns: "Name" and "Password" (or "Login")
+            // 2. Add employee data to the sheet
+            // 3. Create a Google Apps Script (see GOOGLE_SHEETS_SETUP.md for details)
+            // 4. Deploy it as a Web App
+            // 5. Copy the Web App URL and paste it below
+            //
+            // See GOOGLE_SHEETS_SETUP.md for complete setup instructions
+            // ============================================
+            const API_URL = 'https://script.google.com/macros/s/AKfycbyo5u0d41rXf6RK3btgxocgf34qpiWK8e7Lh-O_LTway6bLvrtOU09O0Nx8mSf-KpoC/exec';
+            let employees = [];
+
+            const $gate = $('#password-gate');
+            const $content = $('#driver-page');
+            const $loginForm = $('#login-form');
+            const $loading = $('#login-loading');
+            const $select = $('#driver-select');
+            const $input = $('#driver-password');
+            const $error = $('#password-error');
+            const $loginBtn = $('#btn-login');
+
+            // Fetch Employees from Google Sheet
+            function loadEmployees() {
+                $.ajax({
+                    url: API_URL,
+                    method: 'GET',
+                    dataType: 'json',
+                    timeout: 10000,
+                    cache: false
+                })
+                .done(function(data) {
+                    // Handle both array and object responses
+                    if (Array.isArray(data)) {
+                        employees = data;
+                    } else if (data.employees && Array.isArray(data.employees)) {
+                        employees = data.employees;
+                    } else if (data.data && Array.isArray(data.data)) {
+                        employees = data.data;
+                    } else {
+                        employees = [];
+                    }
+                    
+                    // Clear existing options except the first one
+                    $select.find('option:not(:first)').remove();
+                    
+                    if (employees.length === 0) {
+                        $loading.html('<p style="color: #dc3545;">No employees found. Please check your Google Sheet configuration.</p>');
+                        return;
+                    }
+                    
+                    employees.forEach(emp => {
+                        // Support multiple field name variations
+                        const name = emp.Name || emp.name || emp.employee_name || emp.Employee || emp.employee || '';
+                        const password = emp.Login || emp.login || emp.Password || emp.password || emp.pass || '';
+                        
+                        if (name && password) {
+                            $select.append(`<option value="${password}">${name}</option>`);
+                        }
+                    });
+                    
+                    if ($select.find('option').length === 1) {
+                        $loading.html('<p style="color: #dc3545;">No valid employees found. Please check your Google Sheet has Name and Password columns.</p>');
+                        return;
+                    }
+                    
+                    $loading.hide();
+                    $loginForm.fadeIn();
+                })
+                .fail(function(jqxhr, textStatus, error) {
+                    console.error("Request Failed: " + textStatus + ", " + error);
+                    let errorMsg = 'Failed to load employee data. ';
+                    if (textStatus === 'timeout') {
+                        errorMsg += 'Request timed out. Please check your internet connection.';
+                    } else if (jqxhr.status === 0) {
+                        errorMsg += 'Could not connect to server. Please check your Google Sheets API URL.';
+                    } else {
+                        errorMsg += 'Please refresh the page or check your Google Sheet configuration.';
+                    }
+                    $loading.html(`<p style="color: #dc3545;">${errorMsg}</p>`);
+                    $loading.append('<button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: var(--primary-color); color: white; border: none; border-radius: 4px; cursor: pointer;">Refresh Page</button>');
+                });
+            }
+
+            // Initialize employee loading
+            loadEmployees();
+
+            // Check if already logged in
+            function checkAuth() {
+                const storedAuth = sessionStorage.getItem('driver_auth');
+                if (storedAuth) {
+                    try {
+                        const authData = JSON.parse(storedAuth);
+                        if (authData.name) {
+                            $('#employee-name').val(authData.name);
+                            $gate.hide();
+                            $content.fadeIn();
+                            return true;
+                        }
+                    } catch(e) {
+                        sessionStorage.removeItem('driver_auth');
+                    }
+                }
+                return false;
+            }
+
+            // Check authentication on page load
+            if (!checkAuth()) {
+                $gate.show();
+                $content.hide();
+            }
+
+            function checkPassword() {
+                const selectedPassword = $select.val();
+                const enteredPassword = $input.val().trim();
+                const selectedName = $select.find('option:selected').text();
+
+                if (!selectedPassword) {
+                    alert('Please select an employee.');
+                    $select.focus();
+                    return;
+                }
+
+                if (!enteredPassword) {
+                    alert('Please enter your password.');
+                    $input.focus();
+                    return;
+                }
+
+                // Compare password (case-sensitive by default, but you can make it case-insensitive)
+                if (enteredPassword === String(selectedPassword).trim()) {
+                    const authData = { name: selectedName, login: selectedPassword, timestamp: Date.now() };
+                    sessionStorage.setItem('driver_auth', JSON.stringify(authData));
+                    
+                    $('#employee-name').val(selectedName);
+                    $error.hide();
+                    
+                    $gate.fadeOut(300, function() {
+                        $content.fadeIn();
+                        // Scroll to top of content
+                        $('html, body').animate({ scrollTop: $content.offset().top - 100 }, 300);
+                    });
+                } else {
+                    $error.show();
+                    $input.addClass('error');
+                    $input.css('animation', 'shake 0.5s');
+                    setTimeout(() => {
+                        $input.css('animation', '');
+                        $input.focus();
+                        $input.select();
+                    }, 500);
+                }
+            }
+
+            $loginBtn.on('click', function(e) {
+                e.preventDefault();
+                checkPassword();
+            });
+
+            $input.on('keypress', function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    checkPassword();
+                }
+            });
+
+            $input.on('input', function() {
+                $error.hide();
+                $input.removeClass('error');
+            });
+            
+            $select.on('change', function() {
+                $error.hide();
+                $input.val('').focus();
+            });
+
+            // ============================================
+            // FORM SUBMISSION TO GOOGLE SHEETS
+            // ============================================
+            const TIMECARD_API_URL = 'https://script.google.com/macros/s/AKfycbwuJ1p15G08mEEtKPSuoLrsO7B2Y3ZW-4Awh-obZqKku1aw70M81I2MaU8t8Ob7qzUk/exec';
+
+            $('#time-card-form').on('submit', function(e) {
+                e.preventDefault();
+
+                const $form = $(this);
+                const $submitBtn = $form.find('button[type="submit"]');
+                const originalBtnText = $submitBtn.html();
+
+                // Disable submit button and show loading state
+                $submitBtn.prop('disabled', true);
+                $submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Submitting...');
+
+                // Collect all work log rows
+                const workLogRows = [];
+                $('#work-log-table tbody tr').each(function() {
+                    const $row = $(this);
+                    const rowData = {
+                        load_time: $row.find('input[name="load_time[]"]').val() || '',
+                        del_time: $row.find('input[name="del_time[]"]').val() || '',
+                        truck_equip: $row.find('input[name="truck_equip[]"]').val() || '',
+                        num_loads: $row.find('input[name="num_loads[]"]').val() || '',
+                        unit_meas: $row.find('input[name="unit_meas[]"]').val() || '',
+                        material_type: $row.find('input[name="material_type[]"]').val() || '',
+                        source_supplier: $row.find('input[name="source_supplier[]"]').val() || '',
+                        job_desc: $row.find('input[name="job_desc[]"]').val() || '',
+                        job_num: $row.find('input[name="job_num[]"]').val() || '',
+                        job_hours: $row.find('input[name="job_hours[]"]').val() || ''
+                    };
+                    workLogRows.push(rowData);
+                });
+
+                // Collect form data
+                const formData = {
+                    employee_name: $('#employee-name').val(),
+                    date: $('#date').val(),
+                    day_of_week: $('#day-of-week').val(),
+                    work_log_rows: workLogRows,
+                    equipment_num: $('#equipment-num').val() || '',
+                    beg_miles: $('#beg-miles').val() || '',
+                    end_miles: $('#end-miles').val() || '',
+                    total_miles: $('#total-miles').val() || '',
+                    fuel_gallons: $('#fuel-gallons').val() || '',
+                    injured: $('input[name="injured"]:checked').val() || 'no',
+                    injury_details: $('#injury-details').val() || '',
+                    signature: $('#signature').val()
+                };
+
+                // Submit to Google Sheets
+                $.ajax({
+                    url: TIMECARD_API_URL,
+                    method: 'POST',
+                    data: JSON.stringify(formData),
+                    contentType: 'application/json',
+                    dataType: 'json',
+                    timeout: 15000
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        // Show success message
+                        alert('Time card submitted successfully!\n\nThank you for submitting your time card.');
+
+                        // Reset form
+                        $form[0].reset();
+
+                        // Reset work log table to single row
+                        $('#work-log-table tbody').html(`
+                            <tr>
+                                <td><input type="time" name="load_time[]"></td>
+                                <td><input type="time" name="del_time[]"></td>
+                                <td><input type="text" name="truck_equip[]"></td>
+                                <td><input type="number" name="num_loads[]" step="0.5"></td>
+                                <td><input type="text" name="unit_meas[]"></td>
+                                <td><input type="text" name="material_type[]"></td>
+                                <td><input type="text" name="source_supplier[]"></td>
+                                <td><input type="text" name="job_desc[]"></td>
+                                <td><input type="text" name="job_num[]"></td>
+                                <td><input type="number" name="job_hours[]" step="0.25"></td>
+                                <td><button type="button" class="btn-remove-row"><i class="fas fa-trash"></i></button></td>
+                            </tr>
+                        `);
+
+                        // Reset employee name from auth
+                        const storedAuth = sessionStorage.getItem('driver_auth');
+                        if (storedAuth) {
+                            const authData = JSON.parse(storedAuth);
+                            $('#employee-name').val(authData.name);
+                        }
+
+                        // Hide injury details if it was shown
+                        $('#injury-details-group').addClass('hidden');
+
+                        // Scroll to top of form
+                        $('html, body').animate({ scrollTop: $('#driver-page').offset().top - 100 }, 300);
+                    } else {
+                        alert('Error submitting time card:\n' + (response.error || 'Unknown error occurred'));
+                    }
+                })
+                .fail(function(jqxhr, textStatus, error) {
+                    console.error('Submission failed:', textStatus, error);
+                    let errorMsg = 'Failed to submit time card. ';
+                    if (textStatus === 'timeout') {
+                        errorMsg += 'The request timed out. Please check your internet connection and try again.';
+                    } else if (jqxhr.status === 0) {
+                        errorMsg += 'Could not connect to server. Please check your internet connection.';
+                    } else {
+                        errorMsg += 'Please try again or contact support if the problem persists.';
+                    }
+                    alert(errorMsg);
+                })
+                .always(function() {
+                    // Re-enable submit button
+                    $submitBtn.prop('disabled', false);
+                    $submitBtn.html(originalBtnText);
+                });
             });
         });
     </script>
