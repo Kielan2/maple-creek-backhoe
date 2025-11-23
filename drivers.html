@@ -473,15 +473,23 @@
                 };
 
                 // Submit to Google Sheets
+                // Use a form-encoded POST to avoid CORS preflight issues
                 $.ajax({
                     url: TIMECARD_API_URL,
                     method: 'POST',
-                    data: JSON.stringify(formData),
-                    contentType: 'application/json',
-                    dataType: 'json',
+                    data: formData,
                     timeout: 15000
                 })
                 .done(function(response) {
+                    // Parse response if it's a string
+                    if (typeof response === 'string') {
+                        try {
+                            response = JSON.parse(response);
+                        } catch(e) {
+                            console.error('Failed to parse response:', response);
+                        }
+                    }
+
                     if (response.success) {
                         // Show success message
                         alert('Time card submitted successfully!\n\nThank you for submitting your time card.');

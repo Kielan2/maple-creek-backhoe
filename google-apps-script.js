@@ -18,56 +18,88 @@
  */
 function doPost(e) {
   try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-    var data = JSON.parse(e.postData.contents);
+    var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
 
-    // Check if this is the first submission (no headers)
-    var lastRow = sheet.getLastRow();
-    if (lastRow === 0) {
-      // Add headers
-      sheet.appendRow([
-        'Timestamp',
-        'Employee Name',
-        'Date',
-        'Day of Week',
-        'Load Time',
-        'Del Time',
-        'Truck/Equip #',
-        '# of Loads',
-        'Unit of Meas.',
-        'Material Type',
-        'Source/Supplier',
-        'Job Name/Desc.',
-        'Job #/Phase #',
-        'Hours',
-        'Equipment #',
-        'Beg-Miles/Hrs',
-        'End-Miles/Hrs',
-        'Total Miles',
-        'Fuel Gallons',
-        'Injured',
-        'Injury Details',
-        'Signature'
-      ]);
+    // Parse the incoming data - handle both JSON and form-encoded data
+    var data;
+    if (e.postData && e.postData.type === 'application/json') {
+      data = JSON.parse(e.postData.contents);
+    } else {
+      // Form-encoded data
+      data = e.parameter;
+
+      // Reconstruct work_log_rows array from form data
+      var workLogRows = [];
+      if (data['work_log_rows[0][load_time]'] !== undefined) {
+        var i = 0;
+        while (data['work_log_rows[' + i + '][load_time]'] !== undefined) {
+          workLogRows.push({
+            load_time: data['work_log_rows[' + i + '][load_time]'] || '',
+            del_time: data['work_log_rows[' + i + '][del_time]'] || '',
+            truck_equip: data['work_log_rows[' + i + '][truck_equip]'] || '',
+            num_loads: data['work_log_rows[' + i + '][num_loads]'] || '',
+            unit_meas: data['work_log_rows[' + i + '][unit_meas]'] || '',
+            material_type: data['work_log_rows[' + i + '][material_type]'] || '',
+            source_supplier: data['work_log_rows[' + i + '][source_supplier]'] || '',
+            job_desc: data['work_log_rows[' + i + '][job_desc]'] || '',
+            job_num: data['work_log_rows[' + i + '][job_num]'] || '',
+            job_hours: data['work_log_rows[' + i + '][job_hours]'] || ''
+          });
+          i++;
+        }
+        data.work_log_rows = workLogRows;
+      }
     }
 
-    // Process each work log row
-    var workLogRows = data.work_log_rows || [];
+    // Get or create a sheet for this employee
+    var employeeName = data.employee_name || 'Unknown Employee';
+    var sheet = spreadsheet.getSheetByName(employeeName);
 
+    if (!sheet) {
+      // Create a new sheet for this employee
+      sheet = spreadsheet.insertSheet(employeeName);
+    }
+
+    var workLogRows = data.work_log_rows || [];
     if (workLogRows.length === 0) {
-      // If no work log rows, add a single entry with just the basic info
       workLogRows = [{}];
     }
 
-    // Add a row for each work log entry
+    // Find the next empty row
+    var lastRow = sheet.getLastRow();
+    var startRow = lastRow + 1;
+
+    // Add a separator/header block for this submission
+    sheet.appendRow(['']); // Empty row for spacing
+    sheet.appendRow(['MAPLE CREEK BACKHOE SERVICE INC. - EMPLOYEE TIME CARD']);
+
+    // Add employee info block
+    sheet.appendRow(['SUBMISSION TIMESTAMP:', new Date()]);
+    sheet.appendRow(['EMPLOYEE NAME:', data.employee_name || '']);
+    sheet.appendRow(['DATE:', data.date || '']);
+    sheet.appendRow(['DAY OF WEEK:', data.day_of_week || '']);
+    sheet.appendRow(['']); // Empty row
+
+    // Add work log header
+    sheet.appendRow([
+      '',
+      'FROM/LOAD TIME',
+      'TO/DEL. TIME',
+      'TRUCK/EQUIP. #',
+      '# OF LOADS',
+      'UNIT OF MEAS.',
+      'MATERIAL TYPE',
+      'SOURCE/SUPPLIER',
+      'JOB NAME/DESCRIPTION',
+      'JOB #/PHASE #',
+      'JOB HOURS'
+    ]);
+
+    // Add work log rows
     for (var i = 0; i < workLogRows.length; i++) {
       var workLog = workLogRows[i];
-
-      var row = [
-        new Date(), // Timestamp
-        data.employee_name || '',
-        data.date || '',
-        data.day_of_week || '',
+      sheet.appendRow([
+        (i + 1), // Row number
         workLog.load_time || '',
         workLog.del_time || '',
         workLog.truck_equip || '',
@@ -77,19 +109,48 @@ function doPost(e) {
         workLog.source_supplier || '',
         workLog.job_desc || '',
         workLog.job_num || '',
-        workLog.job_hours || '',
-        data.equipment_num || '',
-        data.beg_miles || '',
-        data.end_miles || '',
-        data.total_miles || '',
-        data.fuel_gallons || '',
-        data.injured || '',
-        data.injury_details || '',
-        data.signature || ''
-      ];
-
-      sheet.appendRow(row);
+        workLog.job_hours || ''
+      ]);
     }
+
+    // Add truck/tractor info
+    sheet.appendRow(['']); // Empty row
+    sheet.appendRow(['TRUCK/TRACTOR INFO:']);
+    sheet.appendRow(['EQUIPMENT #:', data.equipment_num || '']);
+    sheet.appendRow(['BEG-MILES/HRS:', data.beg_miles || '']);
+    sheet.appendRow(['END-MILES/HRS:', data.end_miles || '']);
+    sheet.appendRow(['TOTAL MILES:', data.total_miles || '']);
+    sheet.appendRow(['FUEL GALLONS:', data.fuel_gallons || '']);
+
+    // Add safety info
+    sheet.appendRow(['']); // Empty row
+    sheet.appendRow(['WERE YOU INJURED ON THE JOB TODAY?', data.injured || 'no']);
+    if (data.injury_details) {
+      sheet.appendRow(['INJURY DETAILS:', data.injury_details]);
+    }
+
+    // Add signature
+    sheet.appendRow(['']); // Empty row
+    sheet.appendRow(['EMPLOYEE SIGNATURE:', data.signature || '']);
+
+    // Add a separator line
+    var separatorRow = sheet.getLastRow();
+    sheet.appendRow(['END OF TIME CARD']);
+
+    // Format the block (make header rows bold)
+    // Bold the title
+    sheet.getRange(startRow + 2, 1).setFontWeight('bold').setFontSize(12);
+
+    // Bold the section headers
+    sheet.getRange(startRow + 8, 1, 1, 11).setFontWeight('bold').setBackground('#f3f3f3');
+    sheet.getRange(startRow + 8 + workLogRows.length + 2, 1).setFontWeight('bold');
+
+    // Format separator with black background and white text
+    var separatorRange = sheet.getRange(separatorRow + 1, 1, 1, 11);
+    separatorRange.setBackground('#000000');
+    separatorRange.setFontColor('#FFFFFF');
+    separatorRange.setFontWeight('bold');
+    separatorRange.setHorizontalAlignment('center');
 
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
@@ -104,45 +165,3 @@ function doPost(e) {
     })).setMimeType(ContentService.MimeType.JSON);
   }
 }
-
-/**
- * Optional: Test function to verify the script works
- * Run this function in the Apps Script editor to test
- */
-function testDoPost() {
-  var testData = {
-    postData: {
-      contents: JSON.stringify({
-        employee_name: 'Test Employee',
-        date: '2025-11-22',
-        day_of_week: 'Friday',
-        work_log_rows: [
-          {
-            load_time: '08:00',
-            del_time: '09:00',
-            truck_equip: 'Truck 1',
-            num_loads: '5',
-            unit_meas: 'tons',
-            material_type: 'gravel',
-            source_supplier: 'Acme Supply',
-            job_desc: 'Road work',
-            job_num: 'JOB-001',
-            job_hours: '1'
-          }
-        ],
-        equipment_num: 'T-123',
-        beg_miles: '1000',
-        end_miles: '1050',
-        total_miles: '50',
-        fuel_gallons: '10',
-        injured: 'no',
-        injury_details: '',
-        signature: 'Test Employee'
-      })
-    }
-  };
-
-  var result = doPost(testData);
-  Logger.log(result.getContent());
-}
-

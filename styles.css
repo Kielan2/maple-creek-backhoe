@@ -165,7 +165,7 @@ img {
 
 .logo img {
     max-width: 250px;
-    max-height: 100px;
+    max-height: 75px;
     width: auto;
 }
 
@@ -183,7 +183,7 @@ img {
     padding-bottom: 5px;
 }
 
-#main-nav a::after {
+#main-nav a:not(.btn-nav)::after {
     content: '';
     position: absolute;
     width: 0;
@@ -440,6 +440,7 @@ footer {
         flex-direction: column;
         padding: 0;
         gap: 0;
+        text-align: center;
     }
 
     #main-nav li {
@@ -456,10 +457,35 @@ footer {
         padding: 1rem;
     }
 
-    #main-nav .btn-nav {
+    /* Style non-button links to take full width */
+    #main-nav li:nth-child(1),
+    #main-nav li:nth-child(2) {
+        width: 100%;
+        display: block;
+    }
+
+    /* Remove bottom border from list items containing buttons */
+    #main-nav li:nth-child(3),
+    #main-nav li:nth-child(4) {
+        border-bottom: none;
         display: inline-block;
-        margin: 1rem 0;
-        width: auto;
+        width: calc(50% - 1rem);
+        vertical-align: top;
+    }
+
+    /* Style buttons to be side by side */
+    #main-nav .btn-nav {
+        display: block;
+        margin: 0.5rem auto;
+        width: 90%;
+        padding: 0.75rem 1rem;
+        border-radius: 5px;
+        text-align: center;
+    }
+
+    /* Remove underline animation from buttons on mobile */
+    #main-nav .btn-nav::after {
+        display: none;
     }
 
     .logo img {
