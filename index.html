@@ -21,12 +21,12 @@
                 <img src="images/mcb-logo.png" alt="Maple Creek Backhoe">
             </div>
             <nav id="main-nav">
-                <ul>
-                    <li><a href="#services">Services</a></li>
-                    <li><a href="#about">About</a></li>
-                    <li><a href="drivers.html" class="btn-nav">Driver Login</a></li>
-                    <li><a href="#contact" class="btn-nav">Contact Us</a></li>
-                </ul>
+                <div class="nav-links">
+                    <a href="#services" class="nav-link">Services</a>
+                    <a href="#about" class="nav-link">About</a>
+                    <a href="drivers.html" class="btn-nav">Driver Login</a>
+                    <a href="#contact" class="btn-nav">Contact Us</a>
+                </div>
             </nav>
             <div class="mobile-menu-toggle">
                 <span class="bar"></span>
@@ -73,11 +73,6 @@
                         <h3>Site Preparation</h3>
                         <p>Clearing and grading land for construction projects.</p>
                     </div>
-                    <div class="service-card">
-                        <div class="icon">💧</div>
-                        <h3>Drainage Solutions</h3>
-                        <p>Installing culverts and managing water flow.</p>
-                    </div>
                 </div>
             </div>
         </section>
@@ -88,7 +83,7 @@
                 <div class="about-content">
                     <div class="about-text">
                         <h2>About Maple Creek Backhoe</h2>
-                        <p>If your looking for landscaping or just need landscaping products from boulders ,topsoil, gravel give us a call and we can help you achieve all your landscaping needs.</p>
+                        <p>If your looking for landscaping or just need landscaping products from boulders, topsoil, gravel, sand, or other aggregates. Give us a call and we can help you achieve all your landscaping needs.</p>
                         <h3>Servicing the following areas:</h3>
                         <ul>
                             <li>Box Elder County, UT</li>
@@ -116,18 +111,27 @@
                 </div>
                 <div class="contact-wrapper">
                     <div class="contact-info">
+                        <a href="tel:(208) 380-9359">
                         <div class="info-item">
                             <i class="fas fa-phone"></i>
-                            <p>(208) 380-9359</p>
+                            <p class="hide-for-mobile">(208) 380-9359</p>
+                            
                         </div>
+                    </a>
+                    <a href="mailto:maplecreekbackhoe64@gmail.com">
                         <div class="info-item">
                             <i class="fas fa-envelope"></i>
-                            <p>maplecreekbackhoe64@gmail.com</p>
+                            <p class="hide-for-mobile">maplecreekbackhoe64@gmail.com</p>
+                            
                         </div>
+                    </a>
+                    <a href="https://maps.app.goo.gl/cRN2CRczde3zQZfD6" target="_blank">
                         <div class="info-item">
                             <i class="fas fa-map-marker-alt"></i>
-                            <p>2300 South 800 West, Preston, ID</p>
+                            <p class="hide-for-mobile">2300 South 800 West, Preston, ID</p>
+                            
                         </div>
+                    </a>
                     </div>
                     <form id="contact-form">
                         <div class="form-group">
@@ -142,7 +146,7 @@
                             <label for="message">Message</label>
                             <textarea id="message" name="message" rows="5" required></textarea>
                         </div>
-                        <button type="submit" class="btn-primary">Send Message</button>
+                        <button type="submit" class="btn-primary contact-form-btn">Send Message</button>
                     </form>
                 </div>
             </div>
