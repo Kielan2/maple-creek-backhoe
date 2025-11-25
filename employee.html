@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Time Card - Maple Creek Backhoe Services</title>
+    <meta name="description" content="Employee Time Card submission for Maple Creek Backhoe drivers.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+</head>
+<body>
+
+    <header id="main-header">
+        <div class="container driver-header">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="images/mcb-logo.png" alt="Maple Creek Backhoe">
+                </a>
+            </div>
+            
+        </div>
+    </header>
+
+    <main>
+        <!-- Password Gate Section -->
+        <section id="password-gate" class="page-section">
+            <div class="container">
+                <div class="login-container" style="max-width: 400px; margin: 0 auto; text-align: center; padding: 40px 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <i class="fas fa-lock" style="font-size: 3rem; color: #333; margin-bottom: 20px;"></i>
+                    <h2 style="margin-bottom: 20px;">Driver Access</h2>
+                    <div id="login-loading" style="margin-bottom: 20px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+                        <p>Loading employee data...</p>
+                    </div>
+                    <div id="login-form" style="display: none;">
+                        <p style="margin-bottom: 20px;">Select your name and enter your password.</p>
+                        <div class="form-group">
+                            <select id="driver-select" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px; font-size: 16px; background: #fff;">
+                                <option value="">Select Employee</option>
+                            </select>
+                            <input type="password" id="driver-password" placeholder="Enter Password" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px; font-size: 16px;">
+                            <p id="password-error" style="color: #dc3545; display: none; margin-bottom: 15px;">Incorrect password. Please try again.</p>
+                            <button id="btn-login" class="btn-primary" style="width: 100%; justify-content: center;">Access Page</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Manager Dashboard -->
+        <section id="manager-page" class="page-section" style="display: none;">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Manager Dashboard</h2>
+                    <p>View and manage employee time cards and work logs.</p>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    <div class="stat-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <h3 style="margin: 0 0 10px 0; font-size: 1rem; color: #666;">Today's Submissions</h3>
+                        <p style="margin: 0; font-size: 2rem; font-weight: 700; color: var(--primary-color);" id="stat-today">0</p>
+                    </div>
+                    <div class="stat-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <h3 style="margin: 0 0 10px 0; font-size: 1rem; color: #666;">This Week</h3>
+                        <p style="margin: 0; font-size: 2rem; font-weight: 700; color: var(--primary-color);" id="stat-week">0</p>
+                    </div>
+                    <div class="stat-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <h3 style="margin: 0 0 10px 0; font-size: 1rem; color: #666;">Total Hours</h3>
+                        <p style="margin: 0; font-size: 2rem; font-weight: 700; color: var(--primary-color);" id="stat-hours">0</p>
+                    </div>
+                    <div class="stat-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <h3 style="margin: 0 0 10px 0; font-size: 1rem; color: #666;">Active Employees</h3>
+                        <p style="margin: 0; font-size: 2rem; font-weight: 700; color: var(--primary-color);" id="stat-employees">0</p>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filter-section" style="background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <h3 style="margin: 0 0 15px 0;">Filters</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="filter-employee">Employee</label>
+                            <select id="filter-employee" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="">All Employees</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filter-date-from">From Date</label>
+                            <input type="date" id="filter-date-from" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div class="form-group">
+                            <label for="filter-date-to">To Date</label>
+                            <input type="date" id="filter-date-to" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button id="btn-filter" class="btn-primary" style="width: 100%;">Apply Filters</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Time Cards Table -->
+                <div class="timecards-section" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="margin: 0;">Submitted Time Cards</h3>
+                        <button id="btn-refresh" class="btn-secondary"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    </div>
+
+                    <div id="loading-timecards" style="text-align: center; padding: 40px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+                        <p>Loading time cards...</p>
+                    </div>
+
+                    <div id="timecards-container" style="display: none;">
+                        <div class="table-responsive">
+                            <table id="timecards-table" style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                                        <th style="padding: 12px; text-align: left;">Date</th>
+                                        <th style="padding: 12px; text-align: left;">Employee</th>
+                                        <th style="padding: 12px; text-align: left;">Total Hours</th>
+                                        <th style="padding: 12px; text-align: left;">Status</th>
+                                        <th style="padding: 12px; text-align: center;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="timecards-tbody">
+                                    <!-- Time cards will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="no-records" style="text-align: center; padding: 40px; display: none;">
+                            <i class="fas fa-inbox" style="font-size: 3rem; color: #ccc; margin-bottom: 10px;"></i>
+                            <p style="color: #666;">No time cards found for the selected filters.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Driver Page -->
+        <section id="driver-page" class="page-section" style="display: none;">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Employee Time Card</h2>
+                    <p>Please fill out your daily work log accurately.</p>
+                </div>
+
+                <form id="time-card-form" class="styled-form">
+                    <!-- Employee Details -->
+                    <div class="form-section">
+                        <h3>Employee Details</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="employee-name">Employee Name</label>
+                                <input type="text" id="employee-name" name="employee_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="date">Date</label>
+                                <input type="date" id="date" name="date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="day-of-week">Day of Week</label>
+                                <select id="day-of-week" name="day_of_week" required>
+                                    <option value="">Select Day</option>
+                                    <option value="Monday">Monday</option>
+                                    <option value="Tuesday">Tuesday</option>
+                                    <option value="Wednesday">Wednesday</option>
+                                    <option value="Thursday">Thursday</option>
+                                    <option value="Friday">Friday</option>
+                                    <option value="Saturday">Saturday</option>
+                                    <option value="Sunday">Sunday</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Work Log -->
+                    <div class="form-section">
+                        <h3>Daily Work Log</h3>
+                        <div class="table-responsive">
+                            <table id="work-log-table">
+                                <thead>
+                                    <tr>
+                                        <th>From/Load Time</th>
+                                        <th>To/Del. Time</th>
+                                        <th>Truck/Equip #</th>
+                                        <th># of Loads</th>
+                                        <th>Unit of Meas.</th>
+                                        <th>Material Type</th>
+                                        <th>Source/Supplier</th>
+                                        <th>Job Name/Desc.</th>
+                                        <th>Job #/Phase #</th>
+                                        <th>Hours</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="time" name="load_time[]"></td>
+                                        <td><input type="time" name="del_time[]"></td>
+                                        <td><input type="text" name="truck_equip[]"></td>
+                                        <td><input type="number" name="num_loads[]" step="0.5"></td>
+                                        <td><input type="text" name="unit_meas[]"></td>
+                                        <td><input type="text" name="material_type[]"></td>
+                                        <td><input type="text" name="source_supplier[]"></td>
+                                        <td><input type="text" name="job_desc[]"></td>
+                                        <td><input type="text" name="job_num[]"></td>
+                                        <td><input type="number" name="job_hours[]" step="0.25"></td>
+                                        <td><button type="button" class="btn-remove-row"><i class="fas fa-trash"></i></button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <button type="button" id="add-row-btn" class="btn-secondary"><i class="fas fa-plus"></i> Add Row</button>
+                    </div>
+
+                    <!-- Truck/Tractor Info -->
+                    <div class="form-section">
+                        <h3>Truck / Tractor Info</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="equipment-num">Equipment #</label>
+                                <input type="text" id="equipment-num" name="equipment_num">
+                            </div>
+                            <div class="form-group">
+                                <label for="beg-miles">Beg-Miles/Hrs</label>
+                                <input type="number" id="beg-miles" name="beg_miles" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label for="end-miles">End-Miles/Hrs</label>
+                                <input type="number" id="end-miles" name="end_miles" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label for="total-miles">Total Miles</label>
+                                <input type="number" id="total-miles" name="total_miles" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="fuel-gallons">Fuel Gallons</label>
+                                <input type="number" id="fuel-gallons" name="fuel_gallons" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Safety & Sign-off -->
+                    <div class="form-section">
+                        <h3>Safety & Sign-off</h3>
+                        <div class="form-group">
+                            <label>Were you injured on the job today?</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="injured" value="yes"> Yes</label>
+                                <label><input type="radio" name="injured" value="no" checked> No</label>
+                            </div>
+                        </div>
+                        <div class="form-group hidden" id="injury-details-group">
+                            <label for="injury-details">If YES, describe the injury and/or accident:</label>
+                            <textarea id="injury-details" name="injury_details" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="signature">Employee Signature</label>
+                            <input type="text" id="signature" name="signature" placeholder="Type full name to sign" required>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary btn-large">Submit Time Card</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; <span id="current-year"></span> Maple Creek Backhoe. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="main.js"></script>
+    <script>
+        // Simple script for the form interactions
+        $(document).ready(function() {
+            // Add Row
+            $('#add-row-btn').click(function() {
+                const newRow = `
+                    <tr>
+                        <td><input type="time" name="load_time[]"></td>
+                        <td><input type="time" name="del_time[]"></td>
+                        <td><input type="text" name="truck_equip[]"></td>
+                        <td><input type="number" name="num_loads[]" step="0.5"></td>
+                        <td><input type="text" name="unit_meas[]"></td>
+                        <td><input type="text" name="material_type[]"></td>
+                        <td><input type="text" name="source_supplier[]"></td>
+                        <td><input type="text" name="job_desc[]"></td>
+                        <td><input type="text" name="job_num[]"></td>
+                        <td><input type="number" name="job_hours[]" step="0.25"></td>
+                        <td><button type="button" class="btn-remove-row"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                `;
+                $('#work-log-table tbody').append(newRow);
+            });
+
+            // Remove Row
+            $(document).on('click', '.btn-remove-row', function() {
+                $(this).closest('tr').remove();
+            });
+
+            // Calculate Total Miles
+            $('#end-miles, #beg-miles').on('input', function() {
+                const start = parseFloat($('#beg-miles').val()) || 0;
+                const end = parseFloat($('#end-miles').val()) || 0;
+                if (end > start) {
+                    $('#total-miles').val((end - start).toFixed(1));
+                } else {
+                    $('#total-miles').val('');
+                }
+            });
+
+            // Show/Hide Injury Details
+            $('input[name="injured"]').change(function() {
+                if ($(this).val() === 'yes') {
+                    $('#injury-details-group').removeClass('hidden');
+                } else {
+                    $('#injury-details-group').addClass('hidden');
+                }
+            });
+
+            // ============================================
+            // PASSWORD PROTECTION - GOOGLE SHEETS SETUP
+            // ============================================
+            // IMPORTANT: Replace the URL below with your Google Apps Script Web App URL
+            // 
+            // To set up:
+            // 1. Create a Google Sheet with columns: "Name" and "Password" (or "Login")
+            // 2. Add employee data to the sheet
+            // 3. Create a Google Apps Script (see GOOGLE_SHEETS_SETUP.md for details)
+            // 4. Deploy it as a Web App
+            // 5. Copy the Web App URL and paste it below
+            //
+            // See GOOGLE_SHEETS_SETUP.md for complete setup instructions
+            // ============================================
+            const API_URL = 'https://script.google.com/macros/s/AKfycbxqdSgQbMjKevcc92WebrWRj75KcR5ip7GzqYat_m0zP3yGCjzaaxTnJ2vBA1kTeWVU/exec';
+            let employees = [];
+
+            const $gate = $('#password-gate');
+            const $content = $('#driver-page');
+            const $loginForm = $('#login-form');
+            const $loading = $('#login-loading');
+            const $select = $('#driver-select');
+            const $input = $('#driver-password');
+            const $error = $('#password-error');
+            const $loginBtn = $('#btn-login');
+
+            // Fetch Employees from Google Sheet
+            function loadEmployees() {
+                $.ajax({
+                    url: API_URL,
+                    method: 'GET',
+                    dataType: 'json',
+                    timeout: 10000,
+                    cache: false
+                })
+                .done(function(data) {
+                    // Handle both array and object responses
+                    if (Array.isArray(data)) {
+                        employees = data;
+                    } else if (data.employees && Array.isArray(data.employees)) {
+                        employees = data.employees;
+                    } else if (data.data && Array.isArray(data.data)) {
+                        employees = data.data;
+                    } else {
+                        employees = [];
+                    }
+                    
+                    // Clear existing options except the first one
+                    $select.find('option:not(:first)').remove();
+                    
+                    if (employees.length === 0) {
+                        $loading.html('<p style="color: #dc3545;">No employees found. Please check your Google Sheet configuration.</p>');
+                        return;
+                    }
+                    
+                    employees.forEach(emp => {
+                        // Support multiple field name variations
+                        const name = emp.Name || emp.name || emp.employee_name || emp.Employee || emp.employee || '';
+                        const password = emp.Login || emp.login || emp.Password || emp.password || emp.pass || '';
+                        const role = emp.Role || emp.role || emp.type || emp.Type || '';
+
+                        if (name && password) {
+                            // Store role in data attribute for later use
+                            $select.append(`<option value="${password}" data-role="${role}">${name}</option>`);
+                        }
+                    });
+                    
+                    if ($select.find('option').length === 1) {
+                        $loading.html('<p style="color: #dc3545;">No valid employees found. Please check your Google Sheet has Name and Password columns.</p>');
+                        return;
+                    }
+                    
+                    $loading.hide();
+                    $loginForm.fadeIn();
+                })
+                .fail(function(jqxhr, textStatus, error) {
+                    console.error("Request Failed: " + textStatus + ", " + error);
+                    let errorMsg = 'Failed to load employee data. ';
+                    if (textStatus === 'timeout') {
+                        errorMsg += 'Request timed out. Please check your internet connection.';
+                    } else if (jqxhr.status === 0) {
+                        errorMsg += 'Could not connect to server. Please check your Google Sheets API URL.';
+                    } else {
+                        errorMsg += 'Please refresh the page or check your Google Sheet configuration.';
+                    }
+                    $loading.html(`<p style="color: #dc3545;">${errorMsg}</p>`);
+                    $loading.append('<button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: var(--primary-color); color: white; border: none; border-radius: 4px; cursor: pointer;">Refresh Page</button>');
+                });
+            }
+
+            // Initialize employee loading
+            loadEmployees();
+
+            // Check if already logged in
+            function checkAuth() {
+                const storedAuth = sessionStorage.getItem('driver_auth');
+                if (storedAuth) {
+                    try {
+                        const authData = JSON.parse(storedAuth);
+                        if (authData.name) {
+                            $('#employee-name').val(authData.name);
+                            // Log role for debugging/future use
+                            if (authData.role) {
+                                console.log('User role:', authData.role);
+                            }
+                            $gate.hide();
+
+                            // Show appropriate page based on role
+                            if (authData.role && authData.role.toLowerCase() === 'manager') {
+                                $('#manager-page').fadeIn();
+                                loadManagerDashboard();
+                            } else {
+                                $content.fadeIn();
+                            }
+                            return true;
+                        }
+                    } catch(e) {
+                        sessionStorage.removeItem('driver_auth');
+                    }
+                }
+                return false;
+            }
+
+            // Check authentication on page load
+            if (!checkAuth()) {
+                $gate.show();
+                $content.hide();
+            }
+
+            function checkPassword() {
+                const selectedPassword = $select.val();
+                const enteredPassword = $input.val().trim();
+                const selectedOption = $select.find('option:selected');
+                const selectedName = selectedOption.text();
+                const selectedRole = selectedOption.data('role') || '';
+
+                if (!selectedPassword) {
+                    alert('Please select an employee.');
+                    $select.focus();
+                    return;
+                }
+
+                if (!enteredPassword) {
+                    alert('Please enter your password.');
+                    $input.focus();
+                    return;
+                }
+
+                // Compare password (case-sensitive by default, but you can make it case-insensitive)
+                if (enteredPassword === String(selectedPassword).trim()) {
+                    const authData = {
+                        name: selectedName,
+                        login: selectedPassword,
+                        role: selectedRole,
+                        timestamp: Date.now()
+                    };
+                    sessionStorage.setItem('driver_auth', JSON.stringify(authData));
+
+                    $('#employee-name').val(selectedName);
+                    console.log('Logged in as:', selectedName, 'Role:', selectedRole);
+                    $error.hide();
+
+                    $gate.fadeOut(300, function() {
+                        // Show appropriate page based on role
+                        if (selectedRole && selectedRole.toLowerCase() === 'manager') {
+                            $('#manager-page').fadeIn();
+                            loadManagerDashboard();
+                        } else {
+                            $content.fadeIn();
+                        }
+                        // Scroll to top of content
+                        $('html, body').animate({ scrollTop: 0 }, 300);
+                    });
+                } else {
+                    $error.show();
+                    $input.addClass('error');
+                    $input.css('animation', 'shake 0.5s');
+                    setTimeout(() => {
+                        $input.css('animation', '');
+                        $input.focus();
+                        $input.select();
+                    }, 500);
+                }
+            }
+
+            $loginBtn.on('click', function(e) {
+                e.preventDefault();
+                checkPassword();
+            });
+
+            $input.on('keypress', function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    checkPassword();
+                }
+            });
+
+            $input.on('input', function() {
+                $error.hide();
+                $input.removeClass('error');
+            });
+            
+            $select.on('change', function() {
+                $error.hide();
+                $input.val('').focus();
+            });
+
+            // ============================================
+            // FORM SUBMISSION TO GOOGLE SHEETS
+            // ============================================
+            const TIMECARD_API_URL = 'https://script.google.com/macros/s/AKfycbxqdSgQbMjKevcc92WebrWRj75KcR5ip7GzqYat_m0zP3yGCjzaaxTnJ2vBA1kTeWVU/exec';
+
+            $('#time-card-form').on('submit', function(e) {
+                e.preventDefault();
+
+                const $form = $(this);
+                const $submitBtn = $form.find('button[type="submit"]');
+                const originalBtnText = $submitBtn.html();
+
+                // Disable submit button and show loading state
+                $submitBtn.prop('disabled', true);
+                $submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Submitting...');
+
+                // Collect all work log rows
+                const workLogRows = [];
+                $('#work-log-table tbody tr').each(function() {
+                    const $row = $(this);
+                    const rowData = {
+                        load_time: $row.find('input[name="load_time[]"]').val() || '',
+                        del_time: $row.find('input[name="del_time[]"]').val() || '',
+                        truck_equip: $row.find('input[name="truck_equip[]"]').val() || '',
+                        num_loads: $row.find('input[name="num_loads[]"]').val() || '',
+                        unit_meas: $row.find('input[name="unit_meas[]"]').val() || '',
+                        material_type: $row.find('input[name="material_type[]"]').val() || '',
+                        source_supplier: $row.find('input[name="source_supplier[]"]').val() || '',
+                        job_desc: $row.find('input[name="job_desc[]"]').val() || '',
+                        job_num: $row.find('input[name="job_num[]"]').val() || '',
+                        job_hours: $row.find('input[name="job_hours[]"]').val() || ''
+                    };
+                    workLogRows.push(rowData);
+                });
+
+                // Collect form data
+                const formData = {
+                    employee_name: $('#employee-name').val(),
+                    date: $('#date').val(),
+                    day_of_week: $('#day-of-week').val(),
+                    work_log_rows: workLogRows,
+                    equipment_num: $('#equipment-num').val() || '',
+                    beg_miles: $('#beg-miles').val() || '',
+                    end_miles: $('#end-miles').val() || '',
+                    total_miles: $('#total-miles').val() || '',
+                    fuel_gallons: $('#fuel-gallons').val() || '',
+                    injured: $('input[name="injured"]:checked').val() || 'no',
+                    injury_details: $('#injury-details').val() || '',
+                    signature: $('#signature').val()
+                };
+
+                // Submit to Google Sheets
+                // Use a form-encoded POST to avoid CORS preflight issues
+                $.ajax({
+                    url: TIMECARD_API_URL,
+                    method: 'POST',
+                    data: formData,
+                    timeout: 15000
+                })
+                .done(function(response) {
+                    // Parse response if it's a string
+                    if (typeof response === 'string') {
+                        try {
+                            response = JSON.parse(response);
+                        } catch(e) {
+                            console.error('Failed to parse response:', response);
+                        }
+                    }
+
+                    if (response.success) {
+                        // Show success message
+                        alert('Time card submitted successfully!\n\nThank you for submitting your time card.');
+
+                        // Reset form
+                        $form[0].reset();
+
+                        // Reset work log table to single row
+                        $('#work-log-table tbody').html(`
+                            <tr>
+                                <td><input type="time" name="load_time[]"></td>
+                                <td><input type="time" name="del_time[]"></td>
+                                <td><input type="text" name="truck_equip[]"></td>
+                                <td><input type="number" name="num_loads[]" step="0.5"></td>
+                                <td><input type="text" name="unit_meas[]"></td>
+                                <td><input type="text" name="material_type[]"></td>
+                                <td><input type="text" name="source_supplier[]"></td>
+                                <td><input type="text" name="job_desc[]"></td>
+                                <td><input type="text" name="job_num[]"></td>
+                                <td><input type="number" name="job_hours[]" step="0.25"></td>
+                                <td><button type="button" class="btn-remove-row"><i class="fas fa-trash"></i></button></td>
+                            </tr>
+                        `);
+
+                        // Reset employee name from auth
+                        const storedAuth = sessionStorage.getItem('driver_auth');
+                        if (storedAuth) {
+                            const authData = JSON.parse(storedAuth);
+                            $('#employee-name').val(authData.name);
+                        }
+
+                        // Hide injury details if it was shown
+                        $('#injury-details-group').addClass('hidden');
+
+                        // Scroll to top of form
+                        $('html, body').animate({ scrollTop: $('#driver-page').offset().top - 100 }, 300);
+                    } else {
+                        alert('Error submitting time card:\n' + (response.error || 'Unknown error occurred'));
+                    }
+                })
+                .fail(function(jqxhr, textStatus, error) {
+                    console.error('Submission failed:', textStatus, error);
+                    let errorMsg = 'Failed to submit time card. ';
+                    if (textStatus === 'timeout') {
+                        errorMsg += 'The request timed out. Please check your internet connection and try again.';
+                    } else if (jqxhr.status === 0) {
+                        errorMsg += 'Could not connect to server. Please check your internet connection.';
+                    } else {
+                        errorMsg += 'Please try again or contact support if the problem persists.';
+                    }
+                    alert(errorMsg);
+                })
+                .always(function() {
+                    // Re-enable submit button
+                    $submitBtn.prop('disabled', false);
+                    $submitBtn.html(originalBtnText);
+                });
+            });
+
+            // ============================================
+            // MANAGER DASHBOARD FUNCTIONS
+            // ============================================
+            let allTimecards = [];
+
+            // Helper function to format date
+            function formatDate(dateString) {
+                if (!dateString) return 'N/A';
+
+                try {
+                    const date = new Date(dateString);
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const year = date.getFullYear();
+                    return `${month}-${day}-${year}`;
+                } catch(e) {
+                    return dateString;
+                }
+            }
+
+            function loadManagerDashboard() {
+                // Fetch time cards from Google Sheets
+                $('#loading-timecards').show();
+                $('#timecards-container').hide();
+
+                // Use the same timecard API URL to fetch all submissions
+                $.ajax({
+                    url: TIMECARD_API_URL + '?action=getAll',
+                    method: 'GET',
+                    dataType: 'json',
+                    timeout: 15000,
+                    cache: false
+                })
+                .done(function(response) {
+                    if (response.success && response.data) {
+                        allTimecards = response.data;
+                        populateTimecards(allTimecards);
+                        updateStats(allTimecards);
+                        populateEmployeeFilter(allTimecards);
+                    } else {
+                        showError('No time card data available.');
+                    }
+                })
+                .fail(function(jqxhr, textStatus, error) {
+                    console.error('Failed to load time cards:', textStatus, error);
+                    showError('Failed to load time cards. Please refresh the page.');
+                });
+            }
+
+            function populateTimecards(timecards) {
+                $('#loading-timecards').hide();
+                const $tbody = $('#timecards-tbody');
+                $tbody.empty();
+
+                if (!timecards || timecards.length === 0) {
+                    $('#timecards-container').show();
+                    $('#no-records').show();
+                    return;
+                }
+
+                $('#no-records').hide();
+                $('#timecards-container').show();
+
+                timecards.forEach((card, index) => {
+                    const totalHours = calculateTotalHours(card);
+                    const status = card.status || 'Pending';
+                    const statusColor = status === 'Approved' ? '#28a745' : '#ffc107';
+
+                    const approveBtn = status === 'Pending'
+                        ? `<button class="btn-primary btn-approve" data-index="${index}" style="padding: 6px 12px; margin-right: 5px;">
+                               <i class="fas fa-check"></i> Approve
+                           </button>`
+                        : '';
+
+                    const detailsRow = `
+                        <tr class="details-row" id="details-${index}" style="display: none;">
+                            <td colspan="5" style="padding: 20px; background: #f8f9fa;">
+                                <div style="max-width: 100%;">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                                        <div>
+                                            <h4 style="margin: 0 0 10px 0; color: #333;">Employee Information</h4>
+                                            <p style="margin: 5px 0;"><strong>Employee:</strong> ${card.employee_name}</p>
+                                            <p style="margin: 5px 0;"><strong>Date:</strong> ${formatDate(card.date)} (${card.day_of_week || 'N/A'})</p>
+                                            <p style="margin: 5px 0;"><strong>Signature:</strong> ${card.signature}</p>
+                                            <p style="margin: 5px 0;"><strong>Submission ID:</strong> <span style="font-family: monospace;">${card.submission_id || 'N/A'}</span></p>
+                                        </div>
+                                        <div>
+                                            <h4 style="margin: 0 0 10px 0; color: #333;">Equipment & Safety</h4>
+                                            <p style="margin: 5px 0;"><strong>Equipment #:</strong> ${card.equipment_num || 'N/A'}</p>
+                                            <p style="margin: 5px 0;"><strong>Miles:</strong> ${card.beg_miles || 0} - ${card.end_miles || 0} (Total: ${card.total_miles || 0})</p>
+                                            <p style="margin: 5px 0;"><strong>Fuel:</strong> ${card.fuel_gallons || 0} gallons</p>
+                                            <p style="margin: 5px 0;"><strong>Injured:</strong> ${card.injured === 'yes' ? 'Yes - ' + (card.injury_details || 'No details') : 'No'}</p>
+                                        </div>
+                                    </div>
+
+                                    <h4 style="margin: 20px 0 10px 0; color: #333;">Work Log</h4>
+                                    <div style="overflow-x: auto; margin-bottom: 20px;">
+                                        <table style="width: 100%; border-collapse: collapse; background: white;">
+                                            <thead>
+                                                <tr style="background: #e9ecef;">
+                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Load Time</th>
+                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Del. Time</th>
+                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Truck</th>
+                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Loads</th>
+                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Material</th>
+                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Job</th>
+                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Hours</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${card.work_log_rows && card.work_log_rows.length > 0
+                                                    ? card.work_log_rows.map(row => `
+                                                        <tr>
+                                                            <td style="padding: 8px; border: 1px solid #dee2e6;">${row.load_time || '-'}</td>
+                                                            <td style="padding: 8px; border: 1px solid #dee2e6;">${row.del_time || '-'}</td>
+                                                            <td style="padding: 8px; border: 1px solid #dee2e6;">${row.truck_equip || '-'}</td>
+                                                            <td style="padding: 8px; border: 1px solid #dee2e6;">${row.num_loads || '-'}</td>
+                                                            <td style="padding: 8px; border: 1px solid #dee2e6;">${row.material_type || '-'}</td>
+                                                            <td style="padding: 8px; border: 1px solid #dee2e6;">${row.job_desc || '-'}</td>
+                                                            <td style="padding: 8px; border: 1px solid #dee2e6;">${row.job_hours || '-'}</td>
+                                                        </tr>
+                                                    `).join('')
+                                                    : '<tr><td colspan="7" style="padding: 12px; text-align: center;">No work log entries</td></tr>'
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    ${status === 'Pending' ? `
+                                        <h4 style="margin: 20px 0 10px 0; color: #333;">Manager Notes</h4>
+                                        <textarea
+                                            id="notes-${index}"
+                                            class="manager-notes-textarea"
+                                            placeholder="Enter manager notes (optional)..."
+                                            style="width: 100%; min-height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: 'Open Sans', sans-serif; font-size: 14px; resize: vertical;"
+                                        >${card.manager_notes || ''}</textarea>
+                                        <div style="margin-top: 15px; text-align: right;">
+                                            <button class="btn-secondary" onclick="$('#details-${index}').prev().find('.btn-toggle-details').click();" style="padding: 10px 20px; margin-right: 10px;">
+                                                Cancel
+                                            </button>
+                                            <button class="btn-primary btn-approve-inline" data-index="${index}" style="padding: 10px 20px;">
+                                                <i class="fas fa-check"></i> Approve Time Card
+                                            </button>
+                                        </div>
+                                    ` : `
+                                        <h4 style="margin: 20px 0 10px 0; color: #333;">Manager Notes</h4>
+                                        <div style="background: white; padding: 15px; border-radius: 4px; border: 1px solid #dee2e6;">
+                                            ${card.manager_notes || '<em style="color: #999;">No notes provided</em>'}
+                                        </div>
+                                    `}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+
+                    const row = `
+                        <tr style="border-bottom: 1px solid #dee2e6;">
+                            <td style="padding: 12px;">${formatDate(card.date)}</td>
+                            <td style="padding: 12px;">${card.employee_name || 'N/A'}</td>
+                            <td style="padding: 12px;">${totalHours} hrs</td>
+                            <td style="padding: 12px;">
+                                <span style="background: ${statusColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">
+                                    ${status}
+                                </span>
+                            </td>
+                            <td style="padding: 12px; text-align: center;">
+                                <button class="btn-secondary btn-toggle-details" data-index="${index}" style="padding: 6px 12px;">
+                                    <i class="fas fa-chevron-down"></i> <span>View Details</span>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    $tbody.append(row);
+                    $tbody.append(detailsRow);
+                });
+
+                // Bind toggle details buttons
+                $('.btn-toggle-details').on('click', function() {
+                    const index = $(this).data('index');
+                    const $detailsRow = $(`#details-${index}`);
+                    const $icon = $(this).find('i');
+                    const $text = $(this).find('span');
+
+                    if ($detailsRow.is(':visible')) {
+                        // Close the details
+                        $detailsRow.hide();
+                        $icon.removeClass('fa-chevron-up').addClass('fa-chevron-down');
+                        $text.text('View Details');
+                    } else {
+                        // Close any other open details rows
+                        $('.details-row').hide();
+                        $('.btn-toggle-details i').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+                        $('.btn-toggle-details span').text('View Details');
+
+                        // Open this details row
+                        $detailsRow.show();
+                        $icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
+                        $text.text('Hide Details');
+                    }
+                });
+
+                // Bind inline approve buttons
+                $('.btn-approve-inline').on('click', function() {
+                    const index = $(this).data('index');
+                    const card = allTimecards[index];
+                    const managerNotes = $(`#notes-${index}`).val();
+
+                    approveTimeCard(card, managerNotes);
+                });
+            }
+
+            function calculateTotalHours(card) {
+                if (!card.work_log_rows || card.work_log_rows.length === 0) return 0;
+
+                let total = 0;
+                card.work_log_rows.forEach(row => {
+                    const hours = parseFloat(row.job_hours) || 0;
+                    total += hours;
+                });
+                return total.toFixed(2);
+            }
+
+            function updateStats(timecards) {
+                if (!timecards || timecards.length === 0) {
+                    $('#stat-today').text('0');
+                    $('#stat-week').text('0');
+                    $('#stat-hours').text('0');
+                    $('#stat-employees').text('0');
+                    return;
+                }
+
+                // Get today's date in local timezone and format as MM-DD-YYYY
+                const todayDate = new Date();
+                const todayFormatted = String(todayDate.getMonth() + 1).padStart(2, '0') + '-' +
+                                       String(todayDate.getDate()).padStart(2, '0') + '-' +
+                                       todayDate.getFullYear();
+
+                // Get date from one week ago
+                const oneWeekAgo = new Date();
+                oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+                let todayCount = 0;
+                let weekCount = 0;
+                let totalHours = 0;
+                const uniqueEmployees = new Set();
+
+                timecards.forEach(card => {
+                    // Format the card date to MM-DD-YYYY for comparison
+                    const cardDateFormatted = formatDate(card.date);
+
+                    // Check if it's today's submission
+                    if (cardDateFormatted === todayFormatted) {
+                        todayCount++;
+                    }
+
+                    // Check if it's within the last week
+                    const cardDateObj = new Date(card.date);
+                    if (cardDateObj >= oneWeekAgo) {
+                        weekCount++;
+                    }
+
+                    totalHours += parseFloat(calculateTotalHours(card));
+                    uniqueEmployees.add(card.employee_name);
+                });
+
+                $('#stat-today').text(todayCount);
+                $('#stat-week').text(weekCount);
+                $('#stat-hours').text(totalHours.toFixed(1));
+                $('#stat-employees').text(uniqueEmployees.size);
+            }
+
+            function populateEmployeeFilter(timecards) {
+                const uniqueEmployees = new Set();
+                timecards.forEach(card => {
+                    if (card.employee_name) {
+                        uniqueEmployees.add(card.employee_name);
+                    }
+                });
+
+                const $select = $('#filter-employee');
+                $select.find('option:not(:first)').remove();
+
+                Array.from(uniqueEmployees).sort().forEach(emp => {
+                    $select.append(`<option value="${emp}">${emp}</option>`);
+                });
+            }
+
+            // Approve time card function
+            function approveTimeCard(card, managerNotes) {
+                // Confirm approval
+                if (!confirm(`Confirm approval for ${card.employee_name}'s time card (${formatDate(card.date)})?\n\nThis will mark it as approved and move it to their employee sheet.`)) {
+                    return;
+                }
+
+                // Find the button and show loading state
+                const index = allTimecards.indexOf(card);
+                const $btn = $(`.btn-approve-inline[data-index="${index}"]`);
+                const originalText = $btn.html();
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Approving...');
+
+                // Submit approval using submission_id instead of row_number
+                $.ajax({
+                    url: TIMECARD_API_URL + '?action=approve',
+                    method: 'POST',
+                    data: {
+                        action: 'approve',
+                        submission_id: card.submission_id,
+                        manager_notes: managerNotes || ''
+                    },
+                    timeout: 15000
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        alert('Time card approved successfully!');
+                        // Reload the dashboard
+                        loadManagerDashboard();
+                    } else {
+                        alert('Error approving time card: ' + (response.error || 'Unknown error'));
+                        $btn.prop('disabled', false).html(originalText);
+                    }
+                })
+                .fail(function(jqxhr, textStatus, error) {
+                    console.error('Approval failed:', textStatus, error);
+                    alert('Failed to approve time card. Please try again.');
+                    $btn.prop('disabled', false).html(originalText);
+                });
+            }
+
+            function showError(message) {
+                $('#loading-timecards').html(`
+                    <p style="color: #dc3545;">${message}</p>
+                    <button onclick="loadManagerDashboard()" style="margin-top: 10px; padding: 8px 16px; background: var(--primary-color); color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        Try Again
+                    </button>
+                `);
+            }
+
+            // Filter functionality
+            $('#btn-filter').on('click', function() {
+                const employeeFilter = $('#filter-employee').val();
+                const dateFrom = $('#filter-date-from').val();
+                const dateTo = $('#filter-date-to').val();
+
+                let filteredCards = allTimecards;
+
+                if (employeeFilter) {
+                    filteredCards = filteredCards.filter(card => card.employee_name === employeeFilter);
+                }
+
+                if (dateFrom) {
+                    filteredCards = filteredCards.filter(card => card.date >= dateFrom);
+                }
+
+                if (dateTo) {
+                    filteredCards = filteredCards.filter(card => card.date <= dateTo);
+                }
+
+                populateTimecards(filteredCards);
+            });
+
+            // Refresh button
+            $('#btn-refresh').on('click', function() {
+                $(this).html('<i class="fas fa-spinner fa-spin"></i> Refreshing...');
+                loadManagerDashboard();
+                setTimeout(() => {
+                    $(this).html('<i class="fas fa-sync-alt"></i> Refresh');
+                }, 1000);
+            });
+
+            // Approval dialog function
+            function showApprovalDialog(card) {
+                const managerNotes = prompt(`Approve time card for ${card.employee_name} (${card.date})?\n\nEnter manager notes (optional):`);
+
+                // If user cancels, notes will be null
+                if (managerNotes === null) {
+                    return;
+                }
+
+                // Confirm approval
+                if (!confirm(`Confirm approval for ${card.employee_name}'s time card?\n\nThis will move it to their employee sheet.`)) {
+                    return;
+                }
+
+                // Show loading state
+                const $btn = $(`.btn-approve[data-index="${allTimecards.indexOf(card)}"]`);
+                const originalText = $btn.html();
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Approving...');
+
+                // Submit approval using submission_id
+                $.ajax({
+                    url: TIMECARD_API_URL + '?action=approve',
+                    method: 'POST',
+                    data: {
+                        action: 'approve',
+                        submission_id: card.submission_id,
+                        manager_notes: managerNotes || ''
+                    },
+                    timeout: 15000
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        alert('Time card approved successfully!');
+                        // Reload the dashboard
+                        loadManagerDashboard();
+                    } else {
+                        alert('Error approving time card: ' + (response.error || 'Unknown error'));
+                        $btn.prop('disabled', false).html(originalText);
+                    }
+                })
+                .fail(function(jqxhr, textStatus, error) {
+                    console.error('Approval failed:', textStatus, error);
+                    alert('Failed to approve time card. Please try again.');
+                    $btn.prop('disabled', false).html(originalText);
+                });
+            }
+
+            // Make loadManagerDashboard available globally
+            window.loadManagerDashboard = loadManagerDashboard;
+        }); // End of $(document).ready
+    </script>
+</body>
+</html>
