@@ -169,29 +169,222 @@ $(document).ready(function() {
         ease: 'power3.out'
     });
 
-    // Form Submission (Simulation)
+    // Tab Switching Functionality
+    $('.tab-btn').on('click', function() {
+        var targetTab = $(this).data('tab');
+
+        // Remove active class from all buttons and content
+        $('.tab-btn').removeClass('active');
+        $('.tab-content').removeClass('active');
+
+        // Add active class to clicked button and corresponding content
+        $(this).addClass('active');
+        $('#' + targetTab + '-tab').addClass('active');
+    });
+
+    // Handle navigation link to estimator
+    $('a[href="#estimator-form"]').on('click', function(e) {
+        e.preventDefault();
+
+        // Scroll to contact section
+        $('html, body').stop().animate({
+            scrollTop: $('#contact').offset().top - 70
+        }, 800, function() {
+            // After scrolling, switch to estimator tab
+            $('.tab-btn').removeClass('active');
+            $('.tab-content').removeClass('active');
+
+            $('.tab-btn[data-tab="estimator"]').addClass('active');
+            $('#estimator-tab').addClass('active');
+        });
+    });
+
+    // Estimator Calculator
+    $('#calculate-estimate').on('click', function() {
+        var aggregateType = parseFloat($('#aggregate-type').val());
+        var pounds = parseFloat($('#pounds').val());
+        var miles = parseFloat($('#miles').val());
+
+        // Validate inputs
+        if (!aggregateType || !pounds || !miles) {
+            alert('Please fill in all fields.');
+            return;
+        }
+
+        // Calculate costs
+        var materialCost = aggregateType * pounds;
+        var deliveryCost = miles * 0.10; // $0.10 per mile
+        var totalCost = materialCost + deliveryCost;
+
+        // Display results
+        $('#material-cost').text('$' + materialCost.toFixed(2));
+        $('#delivery-cost').text('$' + deliveryCost.toFixed(2));
+        $('#total-cost').text('$' + totalCost.toFixed(2));
+
+        // Hide form and show results
+        gsap.to('#estimator-form', {
+            duration: 0.4,
+            opacity: 0,
+            y: -20,
+            onComplete: function() {
+                $('#estimator-form').hide();
+                $('#estimate-result').removeClass('hidden');
+
+                // Ensure estimate result is ready for animation
+                gsap.set('#estimate-result', { opacity: 1, y: 0 });
+
+                // Animate the result appearing
+                gsap.fromTo('#estimate-result',
+                    { opacity: 0, y: 20 },
+                    {
+                        duration: 0.6,
+                        opacity: 1,
+                        y: 0,
+                        ease: 'power3.out'
+                    }
+                );
+            }
+        });
+    });
+
+    // Recalculate button - show form again
+    $(document).on('click', '#recalculate-estimate', function() {
+        gsap.to('#estimate-result', {
+            duration: 0.4,
+            opacity: 0,
+            y: -20,
+            onComplete: function() {
+                $('#estimate-result').addClass('hidden');
+                // Reset estimate result styles
+                gsap.set('#estimate-result', { opacity: 1, y: 0 });
+
+                $('#estimator-form').show();
+
+                // Reset inline styles before animating
+                gsap.set('#estimator-form', { opacity: 1, y: 0 });
+
+                // Animate the form appearing
+                gsap.fromTo('#estimator-form',
+                    { opacity: 0, y: 20 },
+                    {
+                        duration: 0.6,
+                        opacity: 1,
+                        y: 0,
+                        ease: 'power3.out'
+                    }
+                );
+            }
+        });
+    });
+
+    // Go to Contact button - switch to contact tab
+    $(document).on('click', '#goto-contact', function() {
+        // Switch to contact tab
+        $('.tab-btn').removeClass('active');
+        $('.tab-content').removeClass('active');
+
+        $('.tab-btn[data-tab="contact"]').addClass('active');
+        $('#contact-tab').addClass('active');
+
+        // Reset estimator for next time
+        $('#estimate-result').addClass('hidden');
+        $('#estimator-form').show();
+        gsap.set('#estimator-form', { opacity: 1, y: 0 });
+    });
+
+    // Set Web3Forms access key from config
+    $('#web3forms-key').val(CONFIG.WEB3FORMS_ACCESS_KEY);
+
+    // Form Submission with Web3Forms
     $('#contact-form').on('submit', function(e) {
         e.preventDefault();
-        
-        // Basic validation
-        var name = $('#name').val();
-        var email = $('#email').val();
-        var message = $('#message').val();
 
-        if (name && email && message) {
-            // Simulate AJAX request
-            var btn = $(this).find('button');
-            var originalText = btn.text();
-            
-            btn.text('Sending...').prop('disabled', true);
-            
-            setTimeout(function() {
-                alert('Thank you, ' + name + '! Your message has been sent.');
-                $('#contact-form')[0].reset();
-                btn.text(originalText).prop('disabled', false);
-            }, 1500);
-        } else {
-            alert('Please fill in all fields.');
-        }
+        var form = $(this);
+        var btn = form.find('button[type="submit"]');
+        var originalText = btn.text();
+        var formData = new FormData(this);
+
+        // Disable button and show loading state
+        btn.text('Sending...').prop('disabled', true);
+
+        // Submit to Web3Forms
+        fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success) {
+                // Hide form and show success message
+                gsap.to('#contact-form', {
+                    duration: 0.4,
+                    opacity: 0,
+                    y: -20,
+                    onComplete: function() {
+                        $('#contact-form').hide();
+                        $('#contact-success').removeClass('hidden');
+
+                        // Reset form
+                        form[0].reset();
+                        $('#web3forms-key').val(CONFIG.WEB3FORMS_ACCESS_KEY);
+
+                        // Ensure success message is ready for animation
+                        gsap.set('#contact-success', { opacity: 1, y: 0 });
+
+                        // Animate the success message appearing
+                        gsap.fromTo('#contact-success',
+                            { opacity: 0, y: 20 },
+                            {
+                                duration: 0.6,
+                                opacity: 1,
+                                y: 0,
+                                ease: 'power3.out'
+                            }
+                        );
+                    }
+                });
+            } else {
+                alert('Oops! Something went wrong. Please try again.');
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            alert('Oops! Something went wrong. Please try again.');
+        })
+        .finally(function() {
+            // Re-enable button
+            btn.text(originalText).prop('disabled', false);
+        });
+    });
+
+    // Send Another Message button - show form again
+    $(document).on('click', '#send-another', function() {
+        gsap.to('#contact-success', {
+            duration: 0.4,
+            opacity: 0,
+            y: -20,
+            onComplete: function() {
+                $('#contact-success').addClass('hidden');
+                gsap.set('#contact-success', { opacity: 1, y: 0 });
+
+                $('#contact-form').show();
+
+                // Reset inline styles before animating
+                gsap.set('#contact-form', { opacity: 1, y: 0 });
+
+                // Animate the form appearing
+                gsap.fromTo('#contact-form',
+                    { opacity: 0, y: 20 },
+                    {
+                        duration: 0.6,
+                        opacity: 1,
+                        y: 0,
+                        ease: 'power3.out'
+                    }
+                );
+            }
+        });
     });
 });

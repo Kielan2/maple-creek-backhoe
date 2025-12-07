@@ -24,6 +24,7 @@
                 <div class="nav-links">
                     <a href="#services" class="nav-link">Services</a>
                     <a href="#about" class="nav-link">About</a>
+                    <a href="#estimator-form" class="nav-link">Get an Estimate</a>
                     <a href="employee.html" class="btn-nav">Employee</a>
                     <a href="#contact" class="btn-nav">Contact Us</a>
                 </div>
@@ -102,67 +103,137 @@
             </div>
         </section>
 
-        <!-- Contact Section -->
+        <!-- Contact Section with Tabs -->
         <section id="contact">
             <div class="container">
                 <div class="section-header">
-                    <h2>Contact Us</h2>
-                    <p>Ready to start your project? Get in touch with us today.</p>
+                    <h2>Get Started</h2>
+                    <p>Get an estimate or reach out to us directly.</p>
                 </div>
+
+                <!-- Tab Buttons -->
+                <div class="tab-buttons">
+                    <button class="tab-btn active" data-tab="contact">Contact Us</button>
+                    <button class="tab-btn" data-tab="estimator">Get an Estimate</button>
+                </div>
+
                 <div class="contact-wrapper">
                     <div class="contact-info">
                         <a href="tel:(208) 380-9359">
-                        <div class="info-item">
-                            <i class="fas fa-phone"></i>
-                            <p class="hide-for-mobile">(208) 380-9359</p>                          
-                        </div>
-                    </a>
-                    <a href="mailto:maplecreekbackhoe64@gmail.com">
-                        <div class="info-item">
-                            <i class="fas fa-envelope"></i>
-                            <p class="hide-for-mobile">maplecreekbackhoe64@gmail.com</p>
-                        </div>
-                    </a>
-                    <a href="https://maps.app.goo.gl/cRN2CRczde3zQZfD6" target="_blank">
-                        <div class="info-item">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <p class="hide-for-mobile">2300 South 800 West, Preston, ID</p>
-                        </div>
-                    </a>
-                    <div class="info-item hide-for-desktop">
-                        <a href="https://www.facebook.com/p/Maple-Creek-Backhoe-Service-100046929535343/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-                            <i class="fab fa-facebook"></i>
+                            <div class="info-item">
+                                <i class="fas fa-phone"></i>
+                                <p class="hide-for-mobile">(208) 380-9359</p>
+                            </div>
                         </a>
-                    </div>
-                    <div class="info-item hide-for-desktop">
-                        <a href="https://www.instagram.com/p/C5eZLrqxaBX/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                            <i class="fab fa-instagram"></i>
+                        <a href="mailto:maplecreekbackhoe64@gmail.com">
+                            <div class="info-item">
+                                <i class="fas fa-envelope"></i>
+                                <p class="hide-for-mobile">maplecreekbackhoe64@gmail.com</p>
+                            </div>
                         </a>
-                    </div>
-                    <div class="social-media hide-for-mobile">
-                        <a href="https://www.facebook.com/p/Maple-Creek-Backhoe-Service-100046929535343/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-                            <i class="fab fa-facebook"></i>
+                        <a href="https://maps.app.goo.gl/cRN2CRczde3zQZfD6" target="_blank">
+                            <div class="info-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <p class="hide-for-mobile">2300 South 800 West, Preston, ID</p>
+                            </div>
                         </a>
-                        <a href="https://www.instagram.com/p/C5eZLrqxaBX/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                            <i class="fab fa-instagram"></i>
-                        </a>
+                        <div class="info-item hide-for-desktop">
+                            <a href="https://www.facebook.com/p/Maple-Creek-Backhoe-Service-100046929535343/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                                <i class="fab fa-facebook"></i>
+                            </a>
+                        </div>
+                        <div class="info-item hide-for-desktop">
+                            <a href="https://www.instagram.com/p/C5eZLrqxaBX/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                        </div>
+                        <div class="social-media hide-for-mobile">
+                            <a href="https://www.facebook.com/p/Maple-Creek-Backhoe-Service-100046929535343/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                                <i class="fab fa-facebook"></i>
+                            </a>
+                            <a href="https://www.instagram.com/p/C5eZLrqxaBX/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                        </div>
                     </div>
+
+                    <div class="tab-content-wrapper">
+                        <!-- Estimator Tab Content -->
+                        <div id="estimator-tab" class="tab-content">
+                            <form id="estimator-form">
+                                <div class="form-group">
+                                    <label for="aggregate-type">Type of Aggregate</label>
+                                    <select id="aggregate-type" name="aggregateType" required>
+                                        <option value="">Select aggregate type</option>
+                                        <option value="0.50">Sand - $0.50/lb</option>
+                                        <option value="0.60">Top Soil - $0.60/lb</option>
+                                        <option value="0.55">Compost - $0.55/lb</option>
+                                        <option value="0.65">Gravel - $0.65/lb</option>
+                                        <option value="0.70">Rock - $0.70/lb</option>
+                                        <option value="0.75">Slag - $0.75/lb</option>
+                                        <option value="1.00">Landscape Boulders - $1.00/lb</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="pounds">Amount (pounds)</label>
+                                    <input type="number" id="pounds" name="pounds" min="0" step="1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="miles">Approximate Distance (miles)</label>
+                                    <input type="number" id="miles" name="miles" min="0" step="0.1" required>
+                                </div>
+                                <button type="button" class="btn-primary" id="calculate-estimate">Calculate Estimate</button>
+                            </form>
+                            <div id="estimate-result" class="estimate-result hidden">
+                                <h3>Your Estimate</h3>
+                                <div class="estimate-breakdown">
+                                    <div class="estimate-row">
+                                        <span>Material Cost:</span>
+                                        <span id="material-cost">$0.00</span>
+                                    </div>
+                                    <div class="estimate-row">
+                                        <span>Delivery Cost:</span>
+                                        <span id="delivery-cost">$0.00</span>
+                                    </div>
+                                    <div class="estimate-row estimate-total">
+                                        <span>Total Estimate:</span>
+                                        <span id="total-cost">$0.00</span>
+                                    </div>
+                                </div>
+                                <p class="estimate-disclaimer">*This is an approximate estimate. Final pricing may vary. Contact us for a detailed quote.</p>
+                                <div class="estimate-actions">
+                                    <button type="button" class="btn-secondary" id="recalculate-estimate">Calculate Again</button>
+                                    <button type="button" class="btn-primary" id="goto-contact">Contact Us</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Tab Content -->
+                        <div id="contact-tab" class="tab-content active">
+                            <form id="contact-form">
+                                <input type="hidden" name="access_key" id="web3forms-key">
+                                <div class="form-group">
+                                    <label for="name">Name</label>
+                                    <input type="text" id="name" name="name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="email">Email</label>
+                                    <input type="email" id="email" name="email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="message">Message</label>
+                                    <textarea id="message" name="message" rows="5" required></textarea>
+                                </div>
+                                <button type="submit" class="btn-primary contact-form-btn">Send Message</button>
+                            </form>
+                            <div id="contact-success" class="contact-success hidden">
+                                <div class="success-icon">✓</div>
+                                <h3>Thank You!</h3>
+                                <p>Your message has been sent successfully. We'll get back to you soon!</p>
+                                <button type="button" class="btn-primary" id="send-another">Send Another Message</button>
+                            </div>
+                        </div>
                     </div>
-                    <form id="contact-form">
-                        <div class="form-group">
-                            <label for="name">Name</label>
-                            <input type="text" id="name" name="name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="email">Email</label>
-                            <input type="email" id="email" name="email" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="message">Message</label>
-                            <textarea id="message" name="message" rows="5" required></textarea>
-                        </div>
-                        <button type="submit" class="btn-primary contact-form-btn">Send Message</button>
-                    </form>
                 </div>
             </div>
         </section>
@@ -176,6 +247,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="config.js"></script>
     <script src="main.js"></script>
 </body>
 </html>

@@ -526,6 +526,230 @@ img {
     pointer-events: none;
 }
 
+/* Tab Buttons */
+.tab-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.tab-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--white);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 1rem 2.5rem;
+    border-radius: 50px;
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.tab-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--gradient-primary);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+}
+
+.tab-btn:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.tab-btn.active {
+    background: var(--gradient-primary);
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-md);
+}
+
+.tab-btn.active::before {
+    opacity: 1;
+}
+
+/* Tab Content */
+.tab-content-wrapper {
+    position: relative;
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.4s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Estimator Form Styles */
+#estimator-form {
+    display: grid;
+    gap: 1rem;
+}
+
+#estimator-form .btn-primary {
+    justify-self: center;
+    margin-top: 1rem;
+}
+
+#estimator-form select {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #f9fafb;
+}
+
+#estimator-form select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: var(--white);
+    box-shadow: 0 0 0 4px rgba(247, 44, 35, 0.1);
+    transform: translateY(-2px);
+}
+
+#contact-form {
+    display: grid;
+    gap: 1rem;
+}
+
+#contact-form .btn-primary {
+    justify-self: center;
+    margin-top: 1rem;
+}
+
+#send-another {
+    font-size: 1rem !important;
+}
+
+.estimate-result {
+    background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+    padding: 2rem;
+    border-radius: 15px;
+    border: 2px solid var(--primary-color);
+}
+
+.estimate-result h3 {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    color: var(--secondary-color);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.estimate-breakdown {
+    margin-bottom: 1.5rem;
+}
+
+.estimate-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 0;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 1.1rem;
+}
+
+.estimate-row:last-of-type {
+    border-bottom: none;
+}
+
+.estimate-total {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-top: 1rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--primary-color);
+}
+
+.estimate-disclaimer {
+    font-size: 0.9rem;
+    color: #666;
+    text-align: center;
+    font-style: italic;
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.estimate-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.estimate-actions .btn-primary,
+.estimate-actions .btn-secondary {
+    flex: 1;
+    min-width: 150px;
+    text-align: center;
+}
+
+/* Contact Success Message */
+.contact-success {
+    background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+    padding: 3rem 2rem;
+    border-radius: 15px;
+    border: 2px solid var(--primary-color);
+    text-align: center;
+}
+
+.success-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    background: var(--gradient-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: white;
+    font-weight: bold;
+}
+
+.contact-success h3 {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.contact-success p {
+    font-size: 1.1rem;
+    color: #666;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.contact-success .btn-primary {
+    display: inline-block;
+}
+
 /* Contact Section */
 #contact {
     padding: var(--spacing-lg) 0;
@@ -826,6 +1050,30 @@ footer {
 
     .form-group label {
         font-size: 0.9rem;
+    }
+
+    .tab-buttons {
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 0 1rem;
+    }
+
+    .tab-btn {
+        padding: 0.875rem 1.5rem;
+        font-size: 1rem;
+        width: 100%;
+    }
+
+    .estimate-result h3 {
+        font-size: 1.5rem;
+    }
+
+    .estimate-row {
+        font-size: 1rem;
+    }
+
+    .estimate-total {
+        font-size: 1.3rem;
     }
 }
 
