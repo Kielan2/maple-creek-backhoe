@@ -333,21 +333,29 @@
             });
 
             // ============================================
-            // PASSWORD PROTECTION - GOOGLE SHEETS SETUP
+            // SECURE AUTHENTICATION - GOOGLE SHEETS SETUP
             // ============================================
             // IMPORTANT: Replace the URL below with your Google Apps Script Web App URL
-            // 
-            // To set up:
-            // 1. Create a Google Sheet with columns: "Name" and "Password" (or "Login")
-            // 2. Add employee data to the sheet
-            // 3. Create a Google Apps Script (see GOOGLE_SHEETS_SETUP.md for details)
-            // 4. Deploy it as a Web App
-            // 5. Copy the Web App URL and paste it below
             //
-            // See GOOGLE_SHEETS_SETUP.md for complete setup instructions
+            // This system uses:
+            // - SHA-256 password hashing (passwords never sent to client)
+            // - Session token authentication (8-hour expiration)
+            // - Server-side validation for all requests
+            //
+            // See google-apps-script.js for backend setup instructions
             // ============================================
             const API_URL = 'https://script.google.com/macros/s/AKfycbxqdSgQbMjKevcc92WebrWRj75KcR5ip7GzqYat_m0zP3yGCjzaaxTnJ2vBA1kTeWVU/exec';
             let employees = [];
+            let sessionToken = null;
+
+            // SHA-256 hashing function (client-side)
+            async function sha256(message) {
+                const msgBuffer = new TextEncoder().encode(message);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                return hashHex;
+            }
 
             const $gate = $('#password-gate');
             const $content = $('#driver-page');
@@ -358,10 +366,10 @@
             const $error = $('#password-error');
             const $loginBtn = $('#btn-login');
 
-            // Fetch Employees from Google Sheet
+            // Fetch Employee Names Only (no password data)
             function loadEmployees() {
                 $.ajax({
-                    url: API_URL,
+                    url: API_URL + '?action=getEmployeeNames',
                     method: 'GET',
                     dataType: 'json',
                     timeout: 10000,
@@ -378,32 +386,30 @@
                     } else {
                         employees = [];
                     }
-                    
+
                     // Clear existing options except the first one
                     $select.find('option:not(:first)').remove();
-                    
+
                     if (employees.length === 0) {
                         $loading.html('<p style="color: #dc3545;">No employees found. Please check your Google Sheet configuration.</p>');
                         return;
                     }
-                    
-                    employees.forEach(emp => {
-                        // Support multiple field name variations
-                        const name = emp.Name || emp.name || emp.employee_name || emp.Employee || emp.employee || '';
-                        const password = emp.Login || emp.login || emp.Password || emp.password || emp.pass || '';
-                        const role = emp.Role || emp.role || emp.type || emp.Type || '';
 
-                        if (name && password) {
-                            // Store role in data attribute for later use
-                            $select.append(`<option value="${password}" data-role="${role}">${name}</option>`);
+                    employees.forEach(emp => {
+                        // Only name is returned - NO PASSWORD DATA
+                        const name = emp.Name || emp.name || '';
+
+                        if (name) {
+                            // No password or role stored in the option - just the name
+                            $select.append(`<option value="${name}">${name}</option>`);
                         }
                     });
-                    
+
                     if ($select.find('option').length === 1) {
-                        $loading.html('<p style="color: #dc3545;">No valid employees found. Please check your Google Sheet has Name and Password columns.</p>');
+                        $loading.html('<p style="color: #dc3545;">No valid employees found. Please check your Google Sheet has a Name column.</p>');
                         return;
                     }
-                    
+
                     $loading.hide();
                     $loginForm.fadeIn();
                 })
@@ -431,7 +437,10 @@
                 if (storedAuth) {
                     try {
                         const authData = JSON.parse(storedAuth);
-                        if (authData.name) {
+                        if (authData.name && authData.token) {
+                            // Store token globally
+                            sessionToken = authData.token;
+
                             $('#employee-name').val(authData.name);
                             // Log role for debugging/future use
                             if (authData.role) {
@@ -450,6 +459,7 @@
                         }
                     } catch(e) {
                         sessionStorage.removeItem('driver_auth');
+                        sessionToken = null;
                     }
                 }
                 return false;
@@ -461,14 +471,11 @@
                 $content.hide();
             }
 
-            function checkPassword() {
-                const selectedPassword = $select.val();
+            async function checkPassword() {
+                const selectedName = $select.val();
                 const enteredPassword = $input.val().trim();
-                const selectedOption = $select.find('option:selected');
-                const selectedName = selectedOption.text();
-                const selectedRole = selectedOption.data('role') || '';
 
-                if (!selectedPassword) {
+                if (!selectedName) {
                     alert('Please select an employee.');
                     $select.focus();
                     return;
@@ -480,40 +487,73 @@
                     return;
                 }
 
-                // Compare password (case-sensitive by default, but you can make it case-insensitive)
-                if (enteredPassword === String(selectedPassword).trim()) {
-                    const authData = {
-                        name: selectedName,
-                        login: selectedPassword,
-                        role: selectedRole,
-                        timestamp: Date.now()
-                    };
-                    sessionStorage.setItem('driver_auth', JSON.stringify(authData));
+                // Disable login button and show loading state
+                $loginBtn.prop('disabled', true);
+                $loginBtn.html('<i class="fas fa-spinner fa-spin"></i> Authenticating...');
 
-                    $('#employee-name').val(selectedName);
-                    console.log('Logged in as:', selectedName, 'Role:', selectedRole);
-                    $error.hide();
+                try {
+                    // Hash the password client-side
+                    const passwordHash = await sha256(enteredPassword);
 
-                    $gate.fadeOut(300, function() {
-                        // Show appropriate page based on role
-                        if (selectedRole && selectedRole.toLowerCase() === 'manager') {
-                            $('#manager-page').fadeIn();
-                            loadManagerDashboard();
-                        } else {
-                            $content.fadeIn();
-                        }
-                        // Scroll to top of content
-                        $('html, body').animate({ scrollTop: 0 }, 300);
+                    // Send authentication request to server
+                    const response = await $.ajax({
+                        url: API_URL,
+                        method: 'POST',
+                        data: {
+                            action: 'login',
+                            username: selectedName,
+                            passwordHash: passwordHash
+                        },
+                        dataType: 'json',
+                        timeout: 10000
                     });
-                } else {
+
+                    if (response.success && response.token) {
+                        // Store auth data with token
+                        const authData = {
+                            name: response.name,
+                            role: response.role || '',
+                            token: response.token,
+                            timestamp: Date.now()
+                        };
+                        sessionStorage.setItem('driver_auth', JSON.stringify(authData));
+                        sessionToken = response.token;
+
+                        $('#employee-name').val(response.name);
+                        console.log('Logged in as:', response.name, 'Role:', response.role);
+                        $error.hide();
+
+                        $gate.fadeOut(300, function() {
+                            // Show appropriate page based on role
+                            if (response.role && response.role.toLowerCase() === 'manager') {
+                                $('#manager-page').fadeIn();
+                                loadManagerDashboard();
+                            } else {
+                                $content.fadeIn();
+                            }
+                            // Scroll to top of content
+                            $('html, body').animate({ scrollTop: 0 }, 300);
+                        });
+                    } else {
+                        // Authentication failed
+                        $error.text(response.error || 'Invalid username or password');
+                        $error.show();
+                        $input.addClass('error');
+                        $input.css('animation', 'shake 0.5s');
+                        setTimeout(() => {
+                            $input.css('animation', '');
+                            $input.focus();
+                            $input.select();
+                        }, 500);
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    $error.text('Login failed. Please try again.');
                     $error.show();
-                    $input.addClass('error');
-                    $input.css('animation', 'shake 0.5s');
-                    setTimeout(() => {
-                        $input.css('animation', '');
-                        $input.focus();
-                        $input.select();
-                    }, 500);
+                } finally {
+                    // Re-enable login button
+                    $loginBtn.prop('disabled', false);
+                    $loginBtn.html('Access Page');
                 }
             }
 
@@ -576,6 +616,7 @@
 
                 // Collect form data
                 const formData = {
+                    token: sessionToken, // Include session token for authentication
                     employee_name: $('#employee-name').val(),
                     date: $('#date').val(),
                     day_of_week: $('#day-of-week').val(),
@@ -687,14 +728,35 @@
                 }
             }
 
+            function setDefaultDateFilters() {
+                // Set default date range to previous 2 weeks
+                const today = new Date();
+                const twoWeeksAgo = new Date();
+                twoWeeksAgo.setDate(today.getDate() - 14);
+
+                // Format dates as YYYY-MM-DD for input fields
+                const formatDateForInput = (date) => {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                };
+
+                $('#filter-date-from').val(formatDateForInput(twoWeeksAgo));
+                $('#filter-date-to').val(formatDateForInput(today));
+            }
+
             function loadManagerDashboard() {
+                // Set default date filters
+                setDefaultDateFilters();
+
                 // Fetch time cards from Google Sheets
                 $('#loading-timecards').show();
                 $('#timecards-container').hide();
 
-                // Use the same timecard API URL to fetch all submissions
+                // Use the same timecard API URL to fetch all submissions with token
                 $.ajax({
-                    url: TIMECARD_API_URL + '?action=getAll',
+                    url: TIMECARD_API_URL + '?action=getAll&token=' + encodeURIComponent(sessionToken),
                     method: 'GET',
                     dataType: 'json',
                     timeout: 15000,
@@ -703,8 +765,11 @@
                 .done(function(response) {
                     if (response.success && response.data) {
                         allTimecards = response.data;
-                        populateTimecards(allTimecards);
-                        updateStats(allTimecards);
+
+                        // Apply date filter immediately on load
+                        const filteredTimecards = applyFilters(allTimecards);
+                        populateTimecards(filteredTimecards);
+                        updateStats(allTimecards); // Stats still use all data
                         populateEmployeeFilter(allTimecards);
                     } else {
                         showError('No time card data available.');
@@ -973,12 +1038,13 @@
                 const originalText = $btn.html();
                 $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Approving...');
 
-                // Submit approval using submission_id instead of row_number
+                // Submit approval using submission_id with token authentication
                 $.ajax({
                     url: TIMECARD_API_URL + '?action=approve',
                     method: 'POST',
                     data: {
                         action: 'approve',
+                        token: sessionToken,
                         submission_id: card.submission_id,
                         manager_notes: managerNotes || ''
                     },
@@ -1011,25 +1077,40 @@
             }
 
             // Filter functionality
-            $('#btn-filter').on('click', function() {
+            function applyFilters(timecards) {
                 const employeeFilter = $('#filter-employee').val();
                 const dateFrom = $('#filter-date-from').val();
                 const dateTo = $('#filter-date-to').val();
 
-                let filteredCards = allTimecards;
+                let filteredCards = timecards;
 
                 if (employeeFilter) {
                     filteredCards = filteredCards.filter(card => card.employee_name === employeeFilter);
                 }
 
                 if (dateFrom) {
-                    filteredCards = filteredCards.filter(card => card.date >= dateFrom);
+                    filteredCards = filteredCards.filter(card => {
+                        const cardDate = new Date(card.date);
+                        const filterDate = new Date(dateFrom);
+                        return cardDate >= filterDate;
+                    });
                 }
 
                 if (dateTo) {
-                    filteredCards = filteredCards.filter(card => card.date <= dateTo);
+                    filteredCards = filteredCards.filter(card => {
+                        const cardDate = new Date(card.date);
+                        const filterDate = new Date(dateTo);
+                        // Set filter date to end of day
+                        filterDate.setHours(23, 59, 59, 999);
+                        return cardDate <= filterDate;
+                    });
                 }
 
+                return filteredCards;
+            }
+
+            $('#btn-filter').on('click', function() {
+                const filteredCards = applyFilters(allTimecards);
                 populateTimecards(filteredCards);
             });
 
@@ -1061,12 +1142,13 @@
                 const originalText = $btn.html();
                 $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Approving...');
 
-                // Submit approval using submission_id
+                // Submit approval using submission_id with token authentication
                 $.ajax({
                     url: TIMECARD_API_URL + '?action=approve',
                     method: 'POST',
                     data: {
                         action: 'approve',
+                        token: sessionToken,
                         submission_id: card.submission_id,
                         manager_notes: managerNotes || ''
                     },

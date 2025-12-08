@@ -1,42 +1,123 @@
 /**
  * Google Apps Script for Employee Management and Time Card System
+ * SECURE VERSION with AUTOMATIC Password Hashing and Token-Based Authentication
  *
  * SETUP INSTRUCTIONS:
  *
- * This script handles THREE main functions:
- * 1. Employee Login Data (GET request to fetch employees with Name, Login/Password, and Role)
- * 2. Time Card Submissions (POST request to save time cards to Master sheet)
- * 3. Manager Dashboard (GET request with ?action=getAll to retrieve pending time cards)
- * 4. Manager Approval (POST request with ?action=approve to approve and move time cards)
+ * This script handles FIVE main functions:
+ * 1. Employee Names (GET request to fetch employee names only - NO PASSWORDS)
+ * 2. Authentication (POST request with action=login to authenticate and get session token)
+ * 3. Time Card Submissions (POST request with valid token to save time cards)
+ * 4. Manager Dashboard (GET request with ?action=getAll&token=xxx to retrieve time cards)
+ * 5. Manager Approval (POST request with action=approve and valid token)
+ * 6. AUTO-HASH: Automatically hashes passwords when you edit the Employees sheet!
  *
- * SPREADSHEET SETUP:
+ * SPREADSHEET SETUP - EASY MODE:
  * - Sheet 1: "Employees" - Contains employee login information
- *   Columns: Name | Login (Password) | Role
- *   Example:
- *     John Doe | 1234 | Driver
- *     Jane Smith | 5678 | Manager
+ *   Columns: Name | Password | Role
  *
- * - Sheet 2: "Master" - All submitted time cards (pending approval)
- *   Auto-created with headers on first submission
+ *   Simply enter plain-text passwords - they will be AUTOMATICALLY hashed!
  *
- * - Other Sheets: Individual employee sheets (created when manager approves)
+ *   Example - Just type this:
+ *     John Doe   | 1234     | Driver
+ *     Jane Smith | password | Manager
+ *
+ *   The system will automatically convert to:
+ *     John Doe   | 03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4 | Driver
+ *     Jane Smith | 5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8 | Manager
+ *
+ * HOW IT WORKS:
+ * - When you edit a password in the Employees sheet, it's automatically hashed
+ * - SHA-256 hashes are 64 characters long, so the script knows what's already hashed
+ * - To change a password, just type the new password - it will auto-hash
+ * - The original password is replaced with its hash immediately
+ *
+ * - Other Sheets:
+ *   - "Sessions" - Stores active session tokens (auto-created)
+ *   - "Master" - All submitted time cards (auto-created on first submission)
+ *   - Individual employee sheets (created when manager approves)
  *
  * DEPLOYMENT:
  * 1. Open your Google Sheet
  * 2. Go to Extensions → Apps Script
  * 3. Delete any default code
  * 4. Paste this entire file
- * 5. Save the project (name it "Employee Time Card System")
+ * 5. Save the project (name it "Employee Time Card System - Auto Hash")
  * 6. Click Deploy → New deployment
  * 7. Click "Select type" → Web app
  * 8. Configure:
- *    - Description: "Employee Time Card System v1"
+ *    - Description: "Employee Time Card System v2 - Auto Hash"
  *    - Execute as: "Me"
  *    - Who has access: "Anyone"
  * 9. Click "Deploy"
  * 10. Copy the Web App URL
  * 11. Update both API URLs in employee.html with the SAME URL
+ *
+ * ADDING NEW EMPLOYEES:
+ * 1. Open the "Employees" sheet
+ * 2. Add a new row with: Name | Password | Role
+ * 3. The password will automatically hash when you press Enter or move to another cell
+ * 4. Done! The employee can now log in with that password
  */
+
+/**
+ * AUTO-HASH TRIGGER - Runs automatically when the sheet is edited
+ * This converts plain-text passwords to SHA-256 hashes automatically
+ */
+function onEdit(e) {
+  try {
+    var sheet = e.source.getActiveSheet();
+    var range = e.range;
+
+    // Only process edits to the "Employees" sheet
+    if (sheet.getName() !== 'Employees') {
+      return;
+    }
+
+    // Only process edits to column B (Password column, assuming A=Name, B=Password, C=Role)
+    if (range.getColumn() !== 2) {
+      return;
+    }
+
+    // Skip if editing the header row
+    if (range.getRow() === 1) {
+      return;
+    }
+
+    var value = range.getValue();
+
+    // Skip if empty
+    if (!value || value === '') {
+      return;
+    }
+
+    // Convert to string
+    var password = String(value).trim();
+
+    // Check if already hashed (SHA-256 hashes are exactly 64 characters and hex)
+    if (password.length === 64 && /^[a-f0-9]+$/i.test(password)) {
+      // Already hashed, don't re-hash
+      return;
+    }
+
+    // Hash the password
+    var hashedPassword = hashPassword(password);
+
+    // Update the cell with the hashed password
+    range.setValue(hashedPassword);
+
+    // Optional: Show a toast notification
+    SpreadsheetApp.getActiveSpreadsheet().toast(
+      'Password automatically hashed for security',
+      'Auto-Hash Active',
+      3
+    );
+
+  } catch (error) {
+    // Fail silently to avoid interrupting user's workflow
+    Logger.log('Auto-hash error: ' + error.toString());
+  }
+}
 
 /**
  * Handles GET requests for employee data and manager dashboard
@@ -44,15 +125,26 @@
 function doGet(e) {
   try {
     var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-    var action = e.parameter.action || 'getEmployees';
+    var action = e.parameter.action || 'getEmployeeNames';
 
     // Handle different GET request types
     if (action === 'getAll') {
       // Manager Dashboard: Get all pending time cards from Master sheet
+      // Requires valid session token
+      var token = e.parameter.token || '';
+      if (!validateToken(token, spreadsheet)) {
+        return ContentService.createTextOutput(JSON.stringify({
+          success: false,
+          error: 'Unauthorized: Invalid or expired session token'
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
       return getAllTimeCards(spreadsheet);
+    } else if (action === 'getEmployeeNames') {
+      // Default: Get ONLY employee names (no passwords)
+      return getEmployeeNames(spreadsheet);
     } else {
-      // Default: Get employee login data
-      return getEmployees(spreadsheet);
+      // Legacy support - but don't return passwords
+      return getEmployeeNames(spreadsheet);
     }
 
   } catch (error) {
@@ -64,16 +156,17 @@ function doGet(e) {
 }
 
 /**
- * Gets employee login data from the "Employees" sheet
+ * Gets ONLY employee names (no passwords) from the "Employees" sheet
+ * This is safe to call from the client
  */
-function getEmployees(spreadsheet) {
+function getEmployeeNames(spreadsheet) {
   try {
     var employeeSheet = spreadsheet.getSheetByName('Employees');
 
     if (!employeeSheet) {
       return ContentService.createTextOutput(JSON.stringify({
         success: false,
-        error: 'Employees sheet not found. Please create a sheet named "Employees" with columns: Name, Login, Role'
+        error: 'Employees sheet not found. Please create a sheet named "Employees" with columns: Name, PasswordHash, Role'
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -97,10 +190,9 @@ function getEmployees(spreadsheet) {
       // Skip empty rows
       if (!row[0] || row[0] === '') continue;
 
+      // ONLY return name - NO PASSWORD DATA
       var employee = {
-        Name: row[0] || '',
-        Login: row[1] || '',
-        Role: row[2] || ''
+        Name: row[0] || ''
       };
 
       employees.push(employee);
@@ -116,6 +208,210 @@ function getEmployees(spreadsheet) {
       success: false,
       error: 'Error fetching employees: ' + error.toString()
     })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Hashes a password using SHA-256
+ */
+function hashPassword(password) {
+  var rawHash = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, password);
+  var hash = '';
+  for (var i = 0; i < rawHash.length; i++) {
+    var byte = rawHash[i];
+    if (byte < 0) byte += 256;
+    var hexByte = byte.toString(16);
+    if (hexByte.length == 1) hexByte = '0' + hexByte;
+    hash += hexByte;
+  }
+  return hash;
+}
+
+/**
+ * Authenticates a user and returns a session token
+ */
+function authenticateUser(username, passwordHash, spreadsheet) {
+  try {
+    var employeeSheet = spreadsheet.getSheetByName('Employees');
+
+    if (!employeeSheet) {
+      return {
+        success: false,
+        error: 'Employees sheet not found'
+      };
+    }
+
+    var dataRange = employeeSheet.getDataRange();
+    var values = dataRange.getValues();
+
+    // Find the employee
+    for (var i = 1; i < values.length; i++) {
+      var row = values[i];
+      var name = row[0] || '';
+      var storedHash = row[1] || '';
+      var role = row[2] || '';
+
+      if (name === username) {
+        // Compare password hashes
+        if (storedHash === passwordHash) {
+          // Generate session token
+          var token = generateToken(username, role);
+
+          // Store token in Sessions sheet
+          storeToken(token, username, role, spreadsheet);
+
+          return {
+            success: true,
+            token: token,
+            name: username,
+            role: role
+          };
+        } else {
+          return {
+            success: false,
+            error: 'Invalid password'
+          };
+        }
+      }
+    }
+
+    return {
+      success: false,
+      error: 'User not found'
+    };
+
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Authentication error: ' + error.toString()
+    };
+  }
+}
+
+/**
+ * Generates a secure session token
+ */
+function generateToken(username, role) {
+  var timestamp = new Date().getTime();
+  var random = Utilities.getUuid();
+  var tokenData = username + '|' + role + '|' + timestamp + '|' + random;
+  return Utilities.base64Encode(tokenData);
+}
+
+/**
+ * Stores a session token with expiration
+ */
+function storeToken(token, username, role, spreadsheet) {
+  var sessionsSheet = spreadsheet.getSheetByName('Sessions');
+
+  if (!sessionsSheet) {
+    sessionsSheet = spreadsheet.insertSheet('Sessions');
+    sessionsSheet.appendRow(['Token', 'Username', 'Role', 'Created', 'Expires']);
+    var headerRange = sessionsSheet.getRange(1, 1, 1, 5);
+    headerRange.setFontWeight('bold');
+    headerRange.setBackground('#f3f3f3');
+  }
+
+  var now = new Date();
+  var expires = new Date(now.getTime() + (8 * 60 * 60 * 1000)); // 8 hours
+
+  sessionsSheet.appendRow([token, username, role, now, expires]);
+
+  // Clean up old tokens (older than 24 hours)
+  cleanupExpiredTokens(sessionsSheet);
+}
+
+/**
+ * Validates a session token
+ */
+function validateToken(token, spreadsheet) {
+  try {
+    var sessionsSheet = spreadsheet.getSheetByName('Sessions');
+
+    if (!sessionsSheet) {
+      return false;
+    }
+
+    var dataRange = sessionsSheet.getDataRange();
+    var values = dataRange.getValues();
+
+    for (var i = 1; i < values.length; i++) {
+      var row = values[i];
+      var storedToken = row[0];
+      var expires = new Date(row[4]);
+      var now = new Date();
+
+      if (storedToken === token && expires > now) {
+        return true;
+      }
+    }
+
+    return false;
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * Gets user info from token
+ */
+function getUserFromToken(token, spreadsheet) {
+  try {
+    var sessionsSheet = spreadsheet.getSheetByName('Sessions');
+
+    if (!sessionsSheet) {
+      return null;
+    }
+
+    var dataRange = sessionsSheet.getDataRange();
+    var values = dataRange.getValues();
+
+    for (var i = 1; i < values.length; i++) {
+      var row = values[i];
+      var storedToken = row[0];
+      var username = row[1];
+      var role = row[2];
+      var expires = new Date(row[4]);
+      var now = new Date();
+
+      if (storedToken === token && expires > now) {
+        return {
+          username: username,
+          role: role
+        };
+      }
+    }
+
+    return null;
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * Cleans up expired tokens
+ */
+function cleanupExpiredTokens(sessionsSheet) {
+  try {
+    var dataRange = sessionsSheet.getDataRange();
+    var values = dataRange.getValues();
+    var now = new Date();
+    var rowsToDelete = [];
+
+    // Find expired tokens (from bottom to top to preserve row indices)
+    for (var i = values.length - 1; i > 0; i--) {
+      var expires = new Date(values[i][4]);
+      if (expires < now) {
+        rowsToDelete.push(i + 1); // +1 because sheet rows are 1-indexed
+      }
+    }
+
+    // Delete expired rows
+    for (var j = 0; j < rowsToDelete.length; j++) {
+      sessionsSheet.deleteRow(rowsToDelete[j]);
+    }
+  } catch (error) {
+    // Fail silently - this is just cleanup
   }
 }
 
@@ -198,18 +494,52 @@ function getAllTimeCards(spreadsheet) {
 }
 
 /**
- * Handles POST requests for time card submissions and approvals
+ * Handles POST requests for authentication, time card submissions and approvals
  */
 function doPost(e) {
   try {
     var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
 
-    // Check if this is an approval request
-    var action = e.parameter.action || '';
-
-    if (action === 'approve') {
-      return approveTimeCard(e, spreadsheet);
+    // Parse the request
+    var data;
+    if (e.postData && e.postData.type === 'application/json') {
+      data = JSON.parse(e.postData.contents);
     } else {
+      data = e.parameter;
+    }
+
+    var action = data.action || '';
+
+    if (action === 'login') {
+      // Handle login request
+      var username = data.username || '';
+      var passwordHash = data.passwordHash || '';
+
+      var result = authenticateUser(username, passwordHash, spreadsheet);
+
+      return ContentService.createTextOutput(JSON.stringify(result))
+        .setMimeType(ContentService.MimeType.JSON);
+
+    } else if (action === 'approve') {
+      // Validate token before approving
+      var token = data.token || '';
+      if (!validateToken(token, spreadsheet)) {
+        return ContentService.createTextOutput(JSON.stringify({
+          success: false,
+          error: 'Unauthorized: Invalid or expired session token'
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+      return approveTimeCard(e, spreadsheet);
+
+    } else {
+      // Time card submission - validate token
+      var token = data.token || '';
+      if (!validateToken(token, spreadsheet)) {
+        return ContentService.createTextOutput(JSON.stringify({
+          success: false,
+          error: 'Unauthorized: Please log in again'
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
       return submitTimeCard(e, spreadsheet);
     }
 
