@@ -771,8 +771,11 @@
                                                     <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Del. Time</th>
                                                     <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Truck</th>
                                                     <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Loads</th>
+                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Unit</th>
                                                     <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Material</th>
-                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Job</th>
+                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Source/Supplier</th>
+                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Job Desc</th>
+                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Job #</th>
                                                     <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Hours</th>
                                                 </tr>
                                             </thead>
@@ -784,12 +787,15 @@
                                                             <td style="padding: 8px; border: 1px solid #dee2e6;">${row.del_time || '-'}</td>
                                                             <td style="padding: 8px; border: 1px solid #dee2e6;">${row.truck_equip || '-'}</td>
                                                             <td style="padding: 8px; border: 1px solid #dee2e6;">${row.num_loads || '-'}</td>
+                                                            <td style="padding: 8px; border: 1px solid #dee2e6;">${row.unit_meas || '-'}</td>
                                                             <td style="padding: 8px; border: 1px solid #dee2e6;">${row.material_type || '-'}</td>
+                                                            <td style="padding: 8px; border: 1px solid #dee2e6;">${row.source_supplier || '-'}</td>
                                                             <td style="padding: 8px; border: 1px solid #dee2e6;">${row.job_desc || '-'}</td>
+                                                            <td style="padding: 8px; border: 1px solid #dee2e6;">${row.job_num || '-'}</td>
                                                             <td style="padding: 8px; border: 1px solid #dee2e6;">${row.job_hours || '-'}</td>
                                                         </tr>
                                                     `).join('')
-                                                    : '<tr><td colspan="7" style="padding: 12px; text-align: center;">No work log entries</td></tr>'
+                                                    : '<tr><td colspan="10" style="padding: 12px; text-align: center;">No work log entries</td></tr>'
                                                 }
                                             </tbody>
                                         </table>
