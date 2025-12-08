@@ -345,6 +345,7 @@
             // See google-apps-script.js for backend setup instructions
             // ============================================
             const API_URL = 'https://script.google.com/macros/s/AKfycbxqdSgQbMjKevcc92WebrWRj75KcR5ip7GzqYat_m0zP3yGCjzaaxTnJ2vBA1kTeWVU/exec';
+            const TIMECARD_API_URL = 'https://script.google.com/macros/s/AKfycbxqdSgQbMjKevcc92WebrWRj75KcR5ip7GzqYat_m0zP3yGCjzaaxTnJ2vBA1kTeWVU/exec';
             let employees = [];
             let sessionToken = null;
 
@@ -428,9 +429,6 @@
                 });
             }
 
-            // Initialize employee loading
-            loadEmployees();
-
             // Check if already logged in
             function checkAuth() {
                 const storedAuth = sessionStorage.getItem('driver_auth');
@@ -447,17 +445,27 @@
                                 console.log('User role:', authData.role);
                             }
                             $gate.hide();
+                            $('#manager-page').hide();
+                            $content.hide();
 
                             // Show appropriate page based on role
                             if (authData.role && authData.role.toLowerCase() === 'manager') {
-                                $('#manager-page').fadeIn();
-                                loadManagerDashboard();
+                                console.log('Showing manager page...');
+                                $('#manager-page').show();
+                                try {
+                                    loadManagerDashboard();
+                                } catch(err) {
+                                    console.error('Error loading manager dashboard:', err);
+                                    alert('Error loading dashboard: ' + err.message);
+                                }
                             } else {
-                                $content.fadeIn();
+                                console.log('Showing driver page...');
+                                $content.show();
                             }
                             return true;
                         }
                     } catch(e) {
+                        console.error('Auth check error:', e);
                         sessionStorage.removeItem('driver_auth');
                         sessionToken = null;
                     }
@@ -467,8 +475,11 @@
 
             // Check authentication on page load
             if (!checkAuth()) {
+                // Not authenticated - show login gate and load employee list
                 $gate.show();
+                $('#manager-page').hide();
                 $content.hide();
+                loadEmployees();
             }
 
             async function checkPassword() {
@@ -582,7 +593,6 @@
             // ============================================
             // FORM SUBMISSION TO GOOGLE SHEETS
             // ============================================
-            const TIMECARD_API_URL = 'https://script.google.com/macros/s/AKfycbxqdSgQbMjKevcc92WebrWRj75KcR5ip7GzqYat_m0zP3yGCjzaaxTnJ2vBA1kTeWVU/exec';
 
             $('#time-card-form').on('submit', function(e) {
                 e.preventDefault();
@@ -744,6 +754,39 @@
 
                 $('#filter-date-from').val(formatDateForInput(twoWeeksAgo));
                 $('#filter-date-to').val(formatDateForInput(today));
+            }
+
+            // Filter functionality - defined before loadManagerDashboard so it can be used
+            function applyFilters(timecards) {
+                const employeeFilter = $('#filter-employee').val();
+                const dateFrom = $('#filter-date-from').val();
+                const dateTo = $('#filter-date-to').val();
+
+                let filteredCards = timecards;
+
+                if (employeeFilter) {
+                    filteredCards = filteredCards.filter(card => card.employee_name === employeeFilter);
+                }
+
+                if (dateFrom) {
+                    filteredCards = filteredCards.filter(card => {
+                        const cardDate = new Date(card.date);
+                        const filterDate = new Date(dateFrom);
+                        return cardDate >= filterDate;
+                    });
+                }
+
+                if (dateTo) {
+                    filteredCards = filteredCards.filter(card => {
+                        const cardDate = new Date(card.date);
+                        const filterDate = new Date(dateTo);
+                        // Set filter date to end of day
+                        filterDate.setHours(23, 59, 59, 999);
+                        return cardDate <= filterDate;
+                    });
+                }
+
+                return filteredCards;
             }
 
             function loadManagerDashboard() {
@@ -1076,39 +1119,7 @@
                 `);
             }
 
-            // Filter functionality
-            function applyFilters(timecards) {
-                const employeeFilter = $('#filter-employee').val();
-                const dateFrom = $('#filter-date-from').val();
-                const dateTo = $('#filter-date-to').val();
-
-                let filteredCards = timecards;
-
-                if (employeeFilter) {
-                    filteredCards = filteredCards.filter(card => card.employee_name === employeeFilter);
-                }
-
-                if (dateFrom) {
-                    filteredCards = filteredCards.filter(card => {
-                        const cardDate = new Date(card.date);
-                        const filterDate = new Date(dateFrom);
-                        return cardDate >= filterDate;
-                    });
-                }
-
-                if (dateTo) {
-                    filteredCards = filteredCards.filter(card => {
-                        const cardDate = new Date(card.date);
-                        const filterDate = new Date(dateTo);
-                        // Set filter date to end of day
-                        filterDate.setHours(23, 59, 59, 999);
-                        return cardDate <= filterDate;
-                    });
-                }
-
-                return filteredCards;
-            }
-
+            // Filter button handler
             $('#btn-filter').on('click', function() {
                 const filteredCards = applyFilters(allTimecards);
                 populateTimecards(filteredCards);
