@@ -302,12 +302,13 @@ $(document).ready(function() {
         var form = $(this);
         var btn = form.find('button[type="submit"]');
         var originalText = btn.text();
-        var formData = new FormData(this);
 
         // Disable button and show loading state
         btn.text('Sending...').prop('disabled', true);
 
         // Submit to Web3Forms
+        var formData = new FormData(form[0]);
+
         fetch('https://api.web3forms.com/submit', {
             method: 'POST',
             body: formData
