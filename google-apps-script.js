@@ -35,7 +35,6 @@
  * - Other Sheets:
  *   - "Sessions" - Stores active session tokens (auto-created)
  *   - "Master" - All submitted time cards (auto-created on first submission)
- *   - Individual employee sheets (created when manager approves)
  *
  * DEPLOYMENT:
  * 1. Open your Google Sheet
@@ -457,17 +456,25 @@ function getAllTimeCards(spreadsheet) {
         employee_name: row[2] || '',
         date: row[3] || '',
         day_of_week: row[4] || '',
-        equipment_num: row[5] || '',
-        beg_miles: row[6] || '',
-        end_miles: row[7] || '',
-        total_miles: row[8] || '',
-        fuel_gallons: row[9] || '',
-        injured: row[10] || 'no',
-        injury_details: row[11] || '',
-        signature: row[12] || '',
-        work_log_json: row[13] || '[]',
-        status: row[14] || 'Pending',
-        manager_notes: row[15] || ''
+        time_in: row[5] || '',
+        time_out: row[6] || '',
+        equipment_num: row[7] || '',
+        beg_miles: row[8] || '',
+        end_miles: row[9] || '',
+        utah_miles: row[10] || '',
+        idaho_miles: row[11] || '',
+        wyoming_miles: row[12] || '',
+        total_miles: row[13] || '',
+        fuel_gallons: row[14] || '',
+        truck_defects: row[15] || '',
+        trailer_defects: row[16] || '',
+        defect_remarks: row[17] || '',
+        injured: row[18] || 'no',
+        injury_details: row[19] || '',
+        signature: row[20] || '',
+        work_log_json: row[21] || '[]',
+        status: row[22] || 'Pending',
+        manager_notes: row[23] || ''
       };
 
       // Parse work log JSON
@@ -598,11 +605,19 @@ function submitTimeCard(e, spreadsheet) {
         'Employee Name',
         'Date',
         'Day of Week',
+        'Time In',
+        'Time Out',
         'Equipment #',
         'Beg Miles/Hrs',
         'End Miles/Hrs',
+        'Utah Miles',
+        'Idaho Miles',
+        'Wyoming Miles',
         'Total Miles',
         'Fuel Gallons',
+        'Truck Defects',
+        'Trailer Defects',
+        'Defect Remarks',
         'Injured',
         'Injury Details',
         'Signature',
@@ -612,7 +627,7 @@ function submitTimeCard(e, spreadsheet) {
       ]);
 
       // Format header row
-      var headerRange = masterSheet.getRange(1, 1, 1, 16);
+      var headerRange = masterSheet.getRange(1, 1, 1, 24);
       headerRange.setFontWeight('bold');
       headerRange.setBackground('#f3f3f3');
     }
@@ -624,6 +639,10 @@ function submitTimeCard(e, spreadsheet) {
     // Convert work_log_rows to JSON string
     var workLogJson = JSON.stringify(data.work_log_rows || []);
 
+    // Convert defect arrays to comma-separated strings
+    var truckDefects = Array.isArray(data.truck_defects) ? data.truck_defects.join(', ') : (data.truck_defects || '');
+    var trailerDefects = Array.isArray(data.trailer_defects) ? data.trailer_defects.join(', ') : (data.trailer_defects || '');
+
     // Add the time card as a single row
     masterSheet.appendRow([
       submissionId,
@@ -631,11 +650,19 @@ function submitTimeCard(e, spreadsheet) {
       data.employee_name || '',
       data.date || '',
       data.day_of_week || '',
+      data.time_in || '',
+      data.time_out || '',
       data.equipment_num || '',
       data.beg_miles || '',
       data.end_miles || '',
+      data.utah_miles || '',
+      data.idaho_miles || '',
+      data.wyoming_miles || '',
       data.total_miles || '',
       data.fuel_gallons || '',
+      truckDefects,
+      trailerDefects,
+      data.defect_remarks || '',
       data.injured || 'no',
       data.injury_details || '',
       data.signature || '',
@@ -696,12 +723,15 @@ function approveTimeCard(e, spreadsheet) {
     }
 
     // Get the time card data from the row
-    var rowData = masterSheet.getRange(rowNumber, 1, 1, 16).getValues()[0];
+    var rowData = masterSheet.getRange(rowNumber, 1, 1, 24).getValues()[0];
 
     // Update status and manager notes in Master sheet
-    masterSheet.getRange(rowNumber, 15).setValue('Approved');
-    masterSheet.getRange(rowNumber, 16).setValue(managerNotes);
+    masterSheet.getRange(rowNumber, 23).setValue('Approved');
+    masterSheet.getRange(rowNumber, 24).setValue(managerNotes);
 
+    // COMMENTED OUT: Individual employee sheet functionality
+    // All data is now managed in the Master sheet only
+    /*
     // Parse the data
     var submissionId = rowData[0];
     var timestamp = rowData[1];
@@ -711,12 +741,15 @@ function approveTimeCard(e, spreadsheet) {
     var equipmentNum = rowData[5];
     var begMiles = rowData[6];
     var endMiles = rowData[7];
-    var totalMiles = rowData[8];
-    var fuelGallons = rowData[9];
-    var injured = rowData[10];
-    var injuryDetails = rowData[11];
-    var signature = rowData[12];
-    var workLogJson = rowData[13];
+    var utahMiles = rowData[8];
+    var idahoMiles = rowData[9];
+    var wyomingMiles = rowData[10];
+    var totalMiles = rowData[11];
+    var fuelGallons = rowData[12];
+    var injured = rowData[13];
+    var injuryDetails = rowData[14];
+    var signature = rowData[15];
+    var workLogJson = rowData[16];
 
     // Parse work log
     var workLogRows = [];
@@ -789,6 +822,9 @@ function approveTimeCard(e, spreadsheet) {
     employeeSheet.appendRow(['EQUIPMENT #:', equipmentNum]);
     employeeSheet.appendRow(['BEG-MILES/HRS:', begMiles]);
     employeeSheet.appendRow(['END-MILES/HRS:', endMiles]);
+    employeeSheet.appendRow(['UTAH MILES:', utahMiles]);
+    employeeSheet.appendRow(['IDAHO MILES:', idahoMiles]);
+    employeeSheet.appendRow(['WYOMING MILES:', wyomingMiles]);
     employeeSheet.appendRow(['TOTAL MILES:', totalMiles]);
     employeeSheet.appendRow(['FUEL GALLONS:', fuelGallons]);
 
@@ -810,10 +846,11 @@ function approveTimeCard(e, spreadsheet) {
 
     var workLogHeaderRow = startRow + 10 + (managerNotes ? 1 : 0);
     employeeSheet.getRange(workLogHeaderRow, 1, 1, 11).setFontWeight('bold').setBackground('#f3f3f3');
+    */
 
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
-      message: 'Time card approved and moved to employee sheet'
+      message: 'Time card approved'
     })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {

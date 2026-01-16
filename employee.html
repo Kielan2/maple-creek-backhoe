@@ -13,6 +13,90 @@
     <link rel="icon" type="image/png" href="images/favicon.png">
     <link rel="stylesheet" href="styles.css">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <style>
+        /* Checkbox Dropdown Styles */
+        .checkbox-dropdown {
+            position: relative;
+            width: 100%;
+        }
+        .checkbox-dropdown-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .checkbox-dropdown-toggle:hover {
+            border-color: #999;
+        }
+        .checkbox-dropdown.open .checkbox-dropdown-toggle {
+            border-color: var(--primary-color, #d35400);
+            box-shadow: 0 0 0 2px rgba(211, 84, 0, 0.1);
+        }
+        .checkbox-dropdown-toggle i {
+            transition: transform 0.2s;
+            color: #666;
+        }
+        .checkbox-dropdown.open .checkbox-dropdown-toggle i {
+            transform: rotate(180deg);
+        }
+        .checkbox-dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .checkbox-dropdown.open .checkbox-dropdown-content {
+            display: block;
+        }
+        .checkbox-dropdown-content label {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-bottom: 1px solid #f0f0f0;
+            margin: 0;
+            font-weight: normal;
+        }
+        .checkbox-dropdown-content label:last-child {
+            border-bottom: none;
+        }
+        .checkbox-dropdown-content label:hover {
+            background: #f8f9fa;
+        }
+        .checkbox-dropdown-content input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .dropdown-text {
+            color: #666;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+            margin-right: 10px;
+        }
+        .dropdown-text.has-selections {
+            color: #333;
+            font-weight: 500;
+        }
+    </style>
 </head>
 <body>
 
@@ -177,6 +261,14 @@
                                     <option value="Sunday">Sunday</option>
                                 </select>
                             </div>
+                            <div class="form-group">
+                                <label for="time-in">Time In</label>
+                                <input type="time" id="time-in" name="time_in">
+                            </div>
+                            <div class="form-group">
+                                <label for="time-out">Time Out</label>
+                                <input type="time" id="time-out" name="time_out">
+                            </div>
                         </div>
                     </div>
 
@@ -237,6 +329,18 @@
                                 <input type="number" id="end-miles" name="end_miles" step="0.1">
                             </div>
                             <div class="form-group">
+                                <label for="utah-miles">Utah Miles</label>
+                                <input type="number" id="utah-miles" name="utah_miles" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label for="idaho-miles">Idaho Miles</label>
+                                <input type="number" id="idaho-miles" name="idaho_miles" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label for="wyoming-miles">Wyoming Miles</label>
+                                <input type="number" id="wyoming-miles" name="wyoming_miles" step="0.1">
+                            </div>
+                            <div class="form-group">
                                 <label for="total-miles">Total Miles</label>
                                 <input type="number" id="total-miles" name="total_miles" readonly>
                             </div>
@@ -244,6 +348,96 @@
                                 <label for="fuel-gallons">Fuel Gallons</label>
                                 <input type="number" id="fuel-gallons" name="fuel_gallons" step="0.1">
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Defective Items Checklist -->
+                    <div class="form-section">
+                        <h3>Defective Items Checklist</h3>
+                        <p style="margin-bottom: 15px; color: #666;">Check any defective items and provide details in the remarks section below.</p>
+
+                        <div class="form-group">
+                            <label>Truck/Tractor Defective Items</label>
+                            <div class="checkbox-dropdown" id="truck-defects-dropdown">
+                                <div class="checkbox-dropdown-toggle" onclick="toggleDropdown('truck-defects-dropdown')">
+                                    <span class="dropdown-text">Select defective items...</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <div class="checkbox-dropdown-content">
+                                    <label><input type="checkbox" name="truck_defects[]" value="Air Compressor"> Air Compressor</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Air Lines"> Air Lines</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Battery"> Battery</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Brake Accessories"> Brake Accessories</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Brakes"> Brakes</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Carburetor"> Carburetor</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Clutch"> Clutch</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Defroster"> Defroster</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Drive Line"> Drive Line</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Engine"> Engine</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Fifth Wheel"> Fifth Wheel</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Front Axle"> Front Axle</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Fuel Tanks"> Fuel Tanks</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Heater"> Heater</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Horn"> Horn</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Lights"> Lights</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Head - Stop"> Head - Stop</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Tail - Dash"> Tail - Dash</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Turn Indicators"> Turn Indicators</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Mirrors"> Mirrors</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Muffler"> Muffler</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Oil Pressure"> Oil Pressure</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="On-Board Recorder"> On-Board Recorder</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Radiator"> Radiator</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Rear End"> Rear End</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Reflectors"> Reflectors</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Safety Equipment"> Safety Equipment</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Fire Extinguisher"> Fire Extinguisher</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Flags - Flares - Fusees"> Flags - Flares - Fusees</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Spare Bulbs & Fuses"> Spare Bulbs & Fuses</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Spare Seal Beam"> Spare Seal Beam</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Springs"> Springs</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Starter"> Starter</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Steering"> Steering</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Tachograph"> Tachograph</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Tires"> Tires</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Transmission"> Transmission</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Wheels"> Wheels</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Windows"> Windows</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Windshield Wipers"> Windshield Wipers</label>
+                                    <label><input type="checkbox" name="truck_defects[]" value="Other"> Other</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Trailer Defective Items</label>
+                            <div class="checkbox-dropdown" id="trailer-defects-dropdown">
+                                <div class="checkbox-dropdown-toggle" onclick="toggleDropdown('trailer-defects-dropdown')">
+                                    <span class="dropdown-text">Select defective items...</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <div class="checkbox-dropdown-content">
+                                    <label><input type="checkbox" name="trailer_defects[]" value="Brake Connections"> Brake Connections</label>
+                                    <label><input type="checkbox" name="trailer_defects[]" value="Brakes"> Brakes</label>
+                                    <label><input type="checkbox" name="trailer_defects[]" value="Coupling Chains"> Coupling Chains</label>
+                                    <label><input type="checkbox" name="trailer_defects[]" value="Coupling (King) Pin"> Coupling (King) Pin</label>
+                                    <label><input type="checkbox" name="trailer_defects[]" value="Doors"> Doors</label>
+                                    <label><input type="checkbox" name="trailer_defects[]" value="Hitch"> Hitch</label>
+                                    <label><input type="checkbox" name="trailer_defects[]" value="Landing Gear"> Landing Gear</label>
+                                    <label><input type="checkbox" name="trailer_defects[]" value="Lights - All"> Lights - All</label>
+                                    <label><input type="checkbox" name="trailer_defects[]" value="Roof"> Roof</label>
+                                    <label><input type="checkbox" name="trailer_defects[]" value="Springs"> Springs</label>
+                                    <label><input type="checkbox" name="trailer_defects[]" value="Tarpaulin"> Tarpaulin</label>
+                                    <label><input type="checkbox" name="trailer_defects[]" value="Tires"> Tires</label>
+                                    <label><input type="checkbox" name="trailer_defects[]" value="Wheels"> Wheels</label>
+                                    <label><input type="checkbox" name="trailer_defects[]" value="Other"> Other</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="defect-remarks">Defect Remarks</label>
+                            <textarea id="defect-remarks" name="defect_remarks" rows="4" placeholder="Provide details about any defective items checked above..."></textarea>
                         </div>
                     </div>
 
@@ -285,8 +479,63 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <script src="main.js"></script>
     <script>
+        // Checkbox Dropdown Functions
+        function toggleDropdown(dropdownId) {
+            const dropdown = document.getElementById(dropdownId);
+            const allDropdowns = document.querySelectorAll('.checkbox-dropdown');
+
+            // Close all other dropdowns
+            allDropdowns.forEach(dd => {
+                if (dd.id !== dropdownId) {
+                    dd.classList.remove('open');
+                }
+            });
+
+            // Toggle this dropdown
+            dropdown.classList.toggle('open');
+        }
+
+        function updateDropdownText(dropdownId) {
+            const dropdown = document.getElementById(dropdownId);
+            const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]:checked');
+            const textSpan = dropdown.querySelector('.dropdown-text');
+
+            if (checkboxes.length === 0) {
+                textSpan.textContent = 'Select defective items...';
+                textSpan.classList.remove('has-selections');
+            } else if (checkboxes.length === 1) {
+                textSpan.textContent = checkboxes[0].value;
+                textSpan.classList.add('has-selections');
+            } else {
+                textSpan.textContent = checkboxes.length + ' items selected';
+                textSpan.classList.add('has-selections');
+            }
+        }
+
+        function getCheckedValues(dropdownId) {
+            const dropdown = document.getElementById(dropdownId);
+            const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.checkbox-dropdown')) {
+                document.querySelectorAll('.checkbox-dropdown').forEach(dd => {
+                    dd.classList.remove('open');
+                });
+            }
+        });
+
         // Simple script for the form interactions
         $(document).ready(function() {
+            // Setup checkbox dropdown change handlers
+            $('#truck-defects-dropdown input[type="checkbox"]').on('change', function() {
+                updateDropdownText('truck-defects-dropdown');
+            });
+            $('#trailer-defects-dropdown input[type="checkbox"]').on('change', function() {
+                updateDropdownText('trailer-defects-dropdown');
+            });
             // Add Row
             $('#add-row-btn').click(function() {
                 const newRow = `
@@ -344,8 +593,12 @@
             //
             // See google-apps-script.js for backend setup instructions
             // ============================================
-            const API_URL = 'https://script.google.com/macros/s/AKfycbxqdSgQbMjKevcc92WebrWRj75KcR5ip7GzqYat_m0zP3yGCjzaaxTnJ2vBA1kTeWVU/exec';
-            const TIMECARD_API_URL = 'https://script.google.com/macros/s/AKfycbxqdSgQbMjKevcc92WebrWRj75KcR5ip7GzqYat_m0zP3yGCjzaaxTnJ2vBA1kTeWVU/exec';
+            // Production URL
+            // const API_URL = 'https://script.google.com/macros/s/AKfycbxqdSgQbMjKevcc92WebrWRj75KcR5ip7GzqYat_m0zP3yGCjzaaxTnJ2vBA1kTeWVU/exec';
+            // const TIMECARD_API_URL = 'https://script.google.com/macros/s/AKfycbxqdSgQbMjKevcc92WebrWRj75KcR5ip7GzqYat_m0zP3yGCjzaaxTnJ2vBA1kTeWVU/exec';
+            // Development URL
+            const API_URL = 'https://script.google.com/macros/s/AKfycbwwCBczpLxgf066JLMi1FvZVbcrUZF6ZB9kZS9THGvc6ZM-zMdbpFl4Gdbsy703BNAl1A/exec';
+            const TIMECARD_API_URL = 'https://script.google.com/macros/s/AKfycbwwCBczpLxgf066JLMi1FvZVbcrUZF6ZB9kZS9THGvc6ZM-zMdbpFl4Gdbsy703BNAl1A/exec';
             let employees = [];
             let sessionToken = null;
 
@@ -630,12 +883,20 @@
                     employee_name: $('#employee-name').val(),
                     date: $('#date').val(),
                     day_of_week: $('#day-of-week').val(),
+                    time_in: $('#time-in').val() || '',
+                    time_out: $('#time-out').val() || '',
                     work_log_rows: workLogRows,
                     equipment_num: $('#equipment-num').val() || '',
                     beg_miles: $('#beg-miles').val() || '',
                     end_miles: $('#end-miles').val() || '',
+                    utah_miles: $('#utah-miles').val() || '',
+                    idaho_miles: $('#idaho-miles').val() || '',
+                    wyoming_miles: $('#wyoming-miles').val() || '',
                     total_miles: $('#total-miles').val() || '',
                     fuel_gallons: $('#fuel-gallons').val() || '',
+                    truck_defects: getCheckedValues('truck-defects-dropdown'),
+                    trailer_defects: getCheckedValues('trailer-defects-dropdown'),
+                    defect_remarks: $('#defect-remarks').val() || '',
                     injured: $('input[name="injured"]:checked').val() || 'no',
                     injury_details: $('#injury-details').val() || '',
                     signature: $('#signature').val()
@@ -692,6 +953,10 @@
 
                         // Hide injury details if it was shown
                         $('#injury-details-group').addClass('hidden');
+
+                        // Reset defect dropdown displays
+                        updateDropdownText('truck-defects-dropdown');
+                        updateDropdownText('trailer-defects-dropdown');
 
                         // Scroll to top of form
                         $('html, body').animate({ scrollTop: $('#driver-page').offset().top - 100 }, 300);
