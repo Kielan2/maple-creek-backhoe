@@ -1123,14 +1123,29 @@
                                             <h4 style="margin: 0 0 10px 0; color: #333;">Employee Information</h4>
                                             <p style="margin: 5px 0;"><strong>Employee:</strong> ${card.employee_name}</p>
                                             <p style="margin: 5px 0;"><strong>Date:</strong> ${formatDate(card.date)} (${card.day_of_week || 'N/A'})</p>
+                                            <p style="margin: 5px 0;"><strong>Time In:</strong> ${card.time_in || 'N/A'} | <strong>Time Out:</strong> ${card.time_out || 'N/A'}</p>
                                             <p style="margin: 5px 0;"><strong>Signature:</strong> ${card.signature}</p>
                                             <p style="margin: 5px 0;"><strong>Submission ID:</strong> <span style="font-family: monospace;">${card.submission_id || 'N/A'}</span></p>
                                         </div>
                                         <div>
-                                            <h4 style="margin: 0 0 10px 0; color: #333;">Equipment & Safety</h4>
+                                            <h4 style="margin: 0 0 10px 0; color: #333;">Equipment & Mileage</h4>
                                             <p style="margin: 5px 0;"><strong>Equipment #:</strong> ${card.equipment_num || 'N/A'}</p>
-                                            <p style="margin: 5px 0;"><strong>Miles:</strong> ${card.beg_miles || 0} - ${card.end_miles || 0} (Total: ${card.total_miles || 0})</p>
+                                            <p style="margin: 5px 0;"><strong>Beg/End Miles:</strong> ${card.beg_miles || 0} - ${card.end_miles || 0}</p>
+                                            <p style="margin: 5px 0;"><strong>State Miles:</strong> UT: ${card.utah_miles || 0} | ID: ${card.idaho_miles || 0} | WY: ${card.wyoming_miles || 0}</p>
+                                            <p style="margin: 5px 0;"><strong>Total Miles:</strong> ${card.total_miles || 0}</p>
                                             <p style="margin: 5px 0;"><strong>Fuel:</strong> ${card.fuel_gallons || 0} gallons</p>
+                                        </div>
+                                    </div>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                                        <div>
+                                            <h4 style="margin: 0 0 10px 0; color: #333;">Defective Items</h4>
+                                            <p style="margin: 5px 0;"><strong>Truck/Tractor:</strong> ${card.truck_defects || '<em style="color: #999;">None reported</em>'}</p>
+                                            <p style="margin: 5px 0;"><strong>Trailer:</strong> ${card.trailer_defects || '<em style="color: #999;">None reported</em>'}</p>
+                                            ${card.defect_remarks ? `<p style="margin: 5px 0;"><strong>Remarks:</strong> ${card.defect_remarks}</p>` : ''}
+                                        </div>
+                                        <div>
+                                            <h4 style="margin: 0 0 10px 0; color: #333;">Safety</h4>
                                             <p style="margin: 5px 0;"><strong>Injured:</strong> ${card.injured === 'yes' ? 'Yes - ' + (card.injury_details || 'No details') : 'No'}</p>
                                         </div>
                                     </div>
@@ -1148,7 +1163,7 @@
                                                     <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Material</th>
                                                     <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Source/Supplier</th>
                                                     <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Job Desc</th>
-                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Job #</th>
+                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Job#/Phase#</th>
                                                     <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Hours</th>
                                                 </tr>
                                             </thead>
@@ -1174,28 +1189,42 @@
                                         </table>
                                     </div>
 
-                                    ${status === 'Pending' ? `
-                                        <h4 style="margin: 20px 0 10px 0; color: #333;">Manager Notes</h4>
-                                        <textarea
-                                            id="notes-${index}"
-                                            class="manager-notes-textarea"
-                                            placeholder="Enter manager notes (optional)..."
-                                            style="width: 100%; min-height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: 'Open Sans', sans-serif; font-size: 14px; resize: vertical;"
-                                        >${card.manager_notes || ''}</textarea>
-                                        <div style="margin-top: 15px; text-align: right;">
-                                            <button class="btn-secondary" onclick="$('#details-${index}').prev().find('.btn-toggle-details').click();" style="padding: 10px 20px; margin-right: 10px;">
-                                                Cancel
-                                            </button>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                                        <div>
+                                            <h4 style="margin: 0 0 10px 0; color: #333;">Manager Notes</h4>
+                                            <textarea
+                                                id="notes-${index}"
+                                                class="manager-notes-textarea"
+                                                placeholder="Enter manager notes (optional)..."
+                                                style="width: 100%; min-height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: 'Open Sans', sans-serif; font-size: 14px; resize: vertical;"
+                                            >${card.manager_notes || ''}</textarea>
+                                        </div>
+                                        <div>
+                                            <h4 style="margin: 0 0 10px 0; color: #333;">Invoice #</h4>
+                                            <input
+                                                type="text"
+                                                id="invoice-${index}"
+                                                class="invoice-input"
+                                                placeholder="Enter invoice number..."
+                                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: 'Open Sans', sans-serif; font-size: 14px;"
+                                                value="${card.invoice_num || ''}"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 15px; text-align: right;">
+                                        <button class="btn-secondary" onclick="$('#details-${index}').prev().find('.btn-toggle-details').click();" style="padding: 10px 20px; margin-right: 10px;">
+                                            Cancel
+                                        </button>
+                                        ${status === 'Pending' ? `
                                             <button class="btn-primary btn-approve-inline" data-index="${index}" style="padding: 10px 20px;">
                                                 <i class="fas fa-check"></i> Approve Time Card
                                             </button>
-                                        </div>
-                                    ` : `
-                                        <h4 style="margin: 20px 0 10px 0; color: #333;">Manager Notes</h4>
-                                        <div style="background: white; padding: 15px; border-radius: 4px; border: 1px solid #dee2e6;">
-                                            ${card.manager_notes || '<em style="color: #999;">No notes provided</em>'}
-                                        </div>
-                                    `}
+                                        ` : `
+                                            <button class="btn-primary btn-save-changes" data-index="${index}" style="padding: 10px 20px;">
+                                                <i class="fas fa-save"></i> Save Changes
+                                            </button>
+                                        `}
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -1252,20 +1281,47 @@
                     const index = $(this).data('index');
                     const card = allTimecards[index];
                     const managerNotes = $(`#notes-${index}`).val();
+                    const invoiceNum = $(`#invoice-${index}`).val();
 
-                    approveTimeCard(card, managerNotes);
+                    approveTimeCard(card, managerNotes, invoiceNum);
+                });
+
+                // Bind save changes buttons (for editing approved submissions)
+                $('.btn-save-changes').on('click', function() {
+                    const index = $(this).data('index');
+                    const card = allTimecards[index];
+                    const managerNotes = $(`#notes-${index}`).val();
+                    const invoiceNum = $(`#invoice-${index}`).val();
+
+                    saveTimeCardChanges(card, managerNotes, invoiceNum, $(this));
                 });
             }
 
             function calculateTotalHours(card) {
-                if (!card.work_log_rows || card.work_log_rows.length === 0) return 0;
+                // Calculate hours from Time In and Time Out fields
+                if (!card.time_in || !card.time_out) return 0;
 
-                let total = 0;
-                card.work_log_rows.forEach(row => {
-                    const hours = parseFloat(row.job_hours) || 0;
-                    total += hours;
-                });
-                return total.toFixed(2);
+                try {
+                    // Parse time strings (format: "HH:MM")
+                    const [inHours, inMinutes] = card.time_in.split(':').map(Number);
+                    const [outHours, outMinutes] = card.time_out.split(':').map(Number);
+
+                    // Convert to minutes since midnight
+                    const timeInMinutes = inHours * 60 + inMinutes;
+                    const timeOutMinutes = outHours * 60 + outMinutes;
+
+                    // Calculate difference (handle overnight shifts if time_out < time_in)
+                    let diffMinutes = timeOutMinutes - timeInMinutes;
+                    if (diffMinutes < 0) {
+                        diffMinutes += 24 * 60; // Add 24 hours for overnight shift
+                    }
+
+                    // Convert to hours
+                    const totalHours = diffMinutes / 60;
+                    return totalHours.toFixed(2);
+                } catch (e) {
+                    return 0;
+                }
             }
 
             function updateStats(timecards) {
@@ -1334,7 +1390,7 @@
             }
 
             // Approve time card function
-            function approveTimeCard(card, managerNotes) {
+            function approveTimeCard(card, managerNotes, invoiceNum) {
                 // Confirm approval
                 if (!confirm(`Confirm approval for ${card.employee_name}'s time card (${formatDate(card.date)})?\n\nThis will mark it as approved and move it to their employee sheet.`)) {
                     return;
@@ -1354,7 +1410,8 @@
                         action: 'approve',
                         token: sessionToken,
                         submission_id: card.submission_id,
-                        manager_notes: managerNotes || ''
+                        manager_notes: managerNotes || '',
+                        invoice_num: invoiceNum || ''
                     },
                     timeout: 15000
                 })
@@ -1382,6 +1439,41 @@
                         Try Again
                     </button>
                 `);
+            }
+
+            // Save changes function (for editing approved submissions)
+            function saveTimeCardChanges(card, managerNotes, invoiceNum, $btn) {
+                const originalText = $btn.html();
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+
+                // Submit update using submission_id with token authentication
+                $.ajax({
+                    url: TIMECARD_API_URL + '?action=update',
+                    method: 'POST',
+                    data: {
+                        action: 'update',
+                        token: sessionToken,
+                        submission_id: card.submission_id,
+                        manager_notes: managerNotes || '',
+                        invoice_num: invoiceNum || ''
+                    },
+                    timeout: 15000
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        alert('Changes saved successfully!');
+                        // Reload the dashboard to show updated data
+                        loadManagerDashboard();
+                    } else {
+                        alert('Error saving changes: ' + (response.error || 'Unknown error'));
+                        $btn.prop('disabled', false).html(originalText);
+                    }
+                })
+                .fail(function(jqxhr, textStatus, error) {
+                    console.error('Save failed:', textStatus, error);
+                    alert('Failed to save changes. Please try again.');
+                    $btn.prop('disabled', false).html(originalText);
+                });
             }
 
             // Filter button handler

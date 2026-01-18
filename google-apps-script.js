@@ -4,13 +4,14 @@
  *
  * SETUP INSTRUCTIONS:
  *
- * This script handles FIVE main functions:
+ * This script handles SIX main functions:
  * 1. Employee Names (GET request to fetch employee names only - NO PASSWORDS)
  * 2. Authentication (POST request with action=login to authenticate and get session token)
  * 3. Time Card Submissions (POST request with valid token to save time cards)
  * 4. Manager Dashboard (GET request with ?action=getAll&token=xxx to retrieve time cards)
  * 5. Manager Approval (POST request with action=approve and valid token)
- * 6. AUTO-HASH: Automatically hashes passwords when you edit the Employees sheet!
+ * 6. Manager Update (POST request with action=update and valid token to edit notes/invoice)
+ * 7. AUTO-HASH: Automatically hashes passwords when you edit the Employees sheet!
  *
  * SPREADSHEET SETUP - EASY MODE:
  * - Sheet 1: "Employees" - Contains employee login information
@@ -474,7 +475,8 @@ function getAllTimeCards(spreadsheet) {
         signature: row[20] || '',
         work_log_json: row[21] || '[]',
         status: row[22] || 'Pending',
-        manager_notes: row[23] || ''
+        manager_notes: row[23] || '',
+        invoice_num: row[24] || ''
       };
 
       // Parse work log JSON
@@ -537,6 +539,17 @@ function doPost(e) {
         })).setMimeType(ContentService.MimeType.JSON);
       }
       return approveTimeCard(e, spreadsheet);
+
+    } else if (action === 'update') {
+      // Validate token before updating
+      var token = data.token || '';
+      if (!validateToken(token, spreadsheet)) {
+        return ContentService.createTextOutput(JSON.stringify({
+          success: false,
+          error: 'Unauthorized: Invalid or expired session token'
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+      return updateTimeCard(e, spreadsheet);
 
     } else {
       // Time card submission - validate token
@@ -623,11 +636,12 @@ function submitTimeCard(e, spreadsheet) {
         'Signature',
         'Work Log JSON',
         'Status',
-        'Manager Notes'
+        'Manager Notes',
+        'Invoice #'
       ]);
 
       // Format header row
-      var headerRange = masterSheet.getRange(1, 1, 1, 24);
+      var headerRange = masterSheet.getRange(1, 1, 1, 25);
       headerRange.setFontWeight('bold');
       headerRange.setBackground('#f3f3f3');
     }
@@ -699,6 +713,7 @@ function approveTimeCard(e, spreadsheet) {
 
     var submissionId = data.submission_id;
     var managerNotes = data.manager_notes || '';
+    var invoiceNum = data.invoice_num || '';
 
     var masterSheet = spreadsheet.getSheetByName('Master');
 
@@ -723,11 +738,12 @@ function approveTimeCard(e, spreadsheet) {
     }
 
     // Get the time card data from the row
-    var rowData = masterSheet.getRange(rowNumber, 1, 1, 24).getValues()[0];
+    var rowData = masterSheet.getRange(rowNumber, 1, 1, 25).getValues()[0];
 
-    // Update status and manager notes in Master sheet
+    // Update status, manager notes, and invoice # in Master sheet
     masterSheet.getRange(rowNumber, 23).setValue('Approved');
     masterSheet.getRange(rowNumber, 24).setValue(managerNotes);
+    masterSheet.getRange(rowNumber, 25).setValue(invoiceNum);
 
     // COMMENTED OUT: Individual employee sheet functionality
     // All data is now managed in the Master sheet only
@@ -857,6 +873,61 @@ function approveTimeCard(e, spreadsheet) {
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
       error: 'Error approving time card: ' + error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Updates manager notes and invoice # for an existing time card (approved or pending)
+ */
+function updateTimeCard(e, spreadsheet) {
+  try {
+    var data;
+    if (e.postData && e.postData.type === 'application/json') {
+      data = JSON.parse(e.postData.contents);
+    } else {
+      data = e.parameter;
+    }
+
+    var submissionId = data.submission_id;
+    var managerNotes = data.manager_notes || '';
+    var invoiceNum = data.invoice_num || '';
+
+    var masterSheet = spreadsheet.getSheetByName('Master');
+
+    if (!masterSheet) {
+      throw new Error('Master sheet not found');
+    }
+
+    // Find the row with this submission ID
+    var dataRange = masterSheet.getDataRange();
+    var values = dataRange.getValues();
+    var rowNumber = -1;
+
+    for (var i = 1; i < values.length; i++) {
+      if (values[i][0] === submissionId) {
+        rowNumber = i + 1; // Actual row number (accounting for header at row 1)
+        break;
+      }
+    }
+
+    if (rowNumber === -1) {
+      throw new Error('Time card not found with submission ID: ' + submissionId);
+    }
+
+    // Update manager notes and invoice # in Master sheet (columns 24 and 25)
+    masterSheet.getRange(rowNumber, 24).setValue(managerNotes);
+    masterSheet.getRange(rowNumber, 25).setValue(invoiceNum);
+
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      message: 'Time card updated successfully'
+    })).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: 'Error updating time card: ' + error.toString()
     })).setMimeType(ContentService.MimeType.JSON);
   }
 }
