@@ -700,7 +700,7 @@ function submitTimeCard(e, spreadsheet) {
 }
 
 /**
- * Approves a time card: adds manager notes, marks as approved, and moves to employee sheet
+ * Approves a time card: saves all edits, marks as approved
  */
 function approveTimeCard(e, spreadsheet) {
   try {
@@ -712,8 +712,6 @@ function approveTimeCard(e, spreadsheet) {
     }
 
     var submissionId = data.submission_id;
-    var managerNotes = data.manager_notes || '';
-    var invoiceNum = data.invoice_num || '';
 
     var masterSheet = spreadsheet.getSheetByName('Master');
 
@@ -737,13 +735,32 @@ function approveTimeCard(e, spreadsheet) {
       throw new Error('Time card not found with submission ID: ' + submissionId);
     }
 
-    // Get the time card data from the row
-    var rowData = masterSheet.getRange(rowNumber, 1, 1, 25).getValues()[0];
+    // Update all editable fields in Master sheet before approving
+    masterSheet.getRange(rowNumber, 3).setValue(data.employee_name || '');
+    masterSheet.getRange(rowNumber, 4).setValue(data.date || '');
+    masterSheet.getRange(rowNumber, 5).setValue(data.day_of_week || '');
+    masterSheet.getRange(rowNumber, 6).setValue(data.time_in || '');
+    masterSheet.getRange(rowNumber, 7).setValue(data.time_out || '');
+    masterSheet.getRange(rowNumber, 8).setValue(data.equipment_num || '');
+    masterSheet.getRange(rowNumber, 9).setValue(data.beg_miles || '');
+    masterSheet.getRange(rowNumber, 10).setValue(data.end_miles || '');
+    masterSheet.getRange(rowNumber, 11).setValue(data.utah_miles || '');
+    masterSheet.getRange(rowNumber, 12).setValue(data.idaho_miles || '');
+    masterSheet.getRange(rowNumber, 13).setValue(data.wyoming_miles || '');
+    masterSheet.getRange(rowNumber, 14).setValue(data.total_miles || '');
+    masterSheet.getRange(rowNumber, 15).setValue(data.fuel_gallons || '');
+    masterSheet.getRange(rowNumber, 16).setValue(data.truck_defects || '');
+    masterSheet.getRange(rowNumber, 17).setValue(data.trailer_defects || '');
+    masterSheet.getRange(rowNumber, 18).setValue(data.defect_remarks || '');
+    masterSheet.getRange(rowNumber, 19).setValue(data.injured || 'no');
+    masterSheet.getRange(rowNumber, 20).setValue(data.injury_details || '');
+    masterSheet.getRange(rowNumber, 21).setValue(data.signature || '');
+    masterSheet.getRange(rowNumber, 22).setValue(data.work_log_json || '[]');
 
-    // Update status, manager notes, and invoice # in Master sheet
+    // Set status to Approved and save manager fields
     masterSheet.getRange(rowNumber, 23).setValue('Approved');
-    masterSheet.getRange(rowNumber, 24).setValue(managerNotes);
-    masterSheet.getRange(rowNumber, 25).setValue(invoiceNum);
+    masterSheet.getRange(rowNumber, 24).setValue(data.manager_notes || '');
+    masterSheet.getRange(rowNumber, 25).setValue(data.invoice_num || '');
 
     // COMMENTED OUT: Individual employee sheet functionality
     // All data is now managed in the Master sheet only
@@ -878,7 +895,7 @@ function approveTimeCard(e, spreadsheet) {
 }
 
 /**
- * Updates manager notes and invoice # for an existing time card (approved or pending)
+ * Updates all fields for an existing time card (approved or pending)
  */
 function updateTimeCard(e, spreadsheet) {
   try {
@@ -890,8 +907,6 @@ function updateTimeCard(e, spreadsheet) {
     }
 
     var submissionId = data.submission_id;
-    var managerNotes = data.manager_notes || '';
-    var invoiceNum = data.invoice_num || '';
 
     var masterSheet = spreadsheet.getSheetByName('Master');
 
@@ -915,9 +930,56 @@ function updateTimeCard(e, spreadsheet) {
       throw new Error('Time card not found with submission ID: ' + submissionId);
     }
 
-    // Update manager notes and invoice # in Master sheet (columns 24 and 25)
-    masterSheet.getRange(rowNumber, 24).setValue(managerNotes);
-    masterSheet.getRange(rowNumber, 25).setValue(invoiceNum);
+    // Update all editable fields in Master sheet
+    // Column mapping:
+    // 1: Submission ID (don't update)
+    // 2: Timestamp (don't update)
+    // 3: Employee Name
+    // 4: Date
+    // 5: Day of Week
+    // 6: Time In
+    // 7: Time Out
+    // 8: Equipment #
+    // 9: Beg Miles/Hrs
+    // 10: End Miles/Hrs
+    // 11: Utah Miles
+    // 12: Idaho Miles
+    // 13: Wyoming Miles
+    // 14: Total Miles
+    // 15: Fuel Gallons
+    // 16: Truck Defects
+    // 17: Trailer Defects
+    // 18: Defect Remarks
+    // 19: Injured
+    // 20: Injury Details
+    // 21: Signature
+    // 22: Work Log JSON
+    // 23: Status (don't update here)
+    // 24: Manager Notes
+    // 25: Invoice #
+
+    masterSheet.getRange(rowNumber, 3).setValue(data.employee_name || '');
+    masterSheet.getRange(rowNumber, 4).setValue(data.date || '');
+    masterSheet.getRange(rowNumber, 5).setValue(data.day_of_week || '');
+    masterSheet.getRange(rowNumber, 6).setValue(data.time_in || '');
+    masterSheet.getRange(rowNumber, 7).setValue(data.time_out || '');
+    masterSheet.getRange(rowNumber, 8).setValue(data.equipment_num || '');
+    masterSheet.getRange(rowNumber, 9).setValue(data.beg_miles || '');
+    masterSheet.getRange(rowNumber, 10).setValue(data.end_miles || '');
+    masterSheet.getRange(rowNumber, 11).setValue(data.utah_miles || '');
+    masterSheet.getRange(rowNumber, 12).setValue(data.idaho_miles || '');
+    masterSheet.getRange(rowNumber, 13).setValue(data.wyoming_miles || '');
+    masterSheet.getRange(rowNumber, 14).setValue(data.total_miles || '');
+    masterSheet.getRange(rowNumber, 15).setValue(data.fuel_gallons || '');
+    masterSheet.getRange(rowNumber, 16).setValue(data.truck_defects || '');
+    masterSheet.getRange(rowNumber, 17).setValue(data.trailer_defects || '');
+    masterSheet.getRange(rowNumber, 18).setValue(data.defect_remarks || '');
+    masterSheet.getRange(rowNumber, 19).setValue(data.injured || 'no');
+    masterSheet.getRange(rowNumber, 20).setValue(data.injury_details || '');
+    masterSheet.getRange(rowNumber, 21).setValue(data.signature || '');
+    masterSheet.getRange(rowNumber, 22).setValue(data.work_log_json || '[]');
+    masterSheet.getRange(rowNumber, 24).setValue(data.manager_notes || '');
+    masterSheet.getRange(rowNumber, 25).setValue(data.invoice_num || '');
 
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
