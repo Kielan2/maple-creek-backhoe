@@ -450,15 +450,55 @@ function getAllTimeCards(spreadsheet) {
       // Skip empty rows but preserve row numbering
       if (!row[0]) continue;
 
+      // Format date as YYYY-MM-DD for HTML date input
+      var dateValue = row[3];
+      var formattedDate = '';
+      if (dateValue) {
+        if (dateValue instanceof Date) {
+          var year = dateValue.getFullYear();
+          var month = String(dateValue.getMonth() + 1).padStart(2, '0');
+          var day = String(dateValue.getDate()).padStart(2, '0');
+          formattedDate = year + '-' + month + '-' + day;
+        } else {
+          // If it's already a string, try to parse and reformat it
+          formattedDate = String(dateValue);
+        }
+      }
+
+      // Format time as HH:MM for HTML time input
+      var timeInValue = row[5];
+      var formattedTimeIn = '';
+      if (timeInValue) {
+        if (timeInValue instanceof Date) {
+          var hours = String(timeInValue.getHours()).padStart(2, '0');
+          var minutes = String(timeInValue.getMinutes()).padStart(2, '0');
+          formattedTimeIn = hours + ':' + minutes;
+        } else {
+          formattedTimeIn = String(timeInValue);
+        }
+      }
+
+      var timeOutValue = row[6];
+      var formattedTimeOut = '';
+      if (timeOutValue) {
+        if (timeOutValue instanceof Date) {
+          var hours = String(timeOutValue.getHours()).padStart(2, '0');
+          var minutes = String(timeOutValue.getMinutes()).padStart(2, '0');
+          formattedTimeOut = hours + ':' + minutes;
+        } else {
+          formattedTimeOut = String(timeOutValue);
+        }
+      }
+
       var timeCard = {
         row_number: actualRowNumber, // Store the actual row number in the sheet
         submission_id: row[0] || '',
         timestamp: row[1] || '',
         employee_name: row[2] || '',
-        date: row[3] || '',
+        date: formattedDate,
         day_of_week: row[4] || '',
-        time_in: row[5] || '',
-        time_out: row[6] || '',
+        time_in: formattedTimeIn,
+        time_out: formattedTimeOut,
         equipment_num: row[7] || '',
         beg_miles: row[8] || '',
         end_miles: row[9] || '',
@@ -513,6 +553,9 @@ function doPost(e) {
     var data;
     if (e.postData && e.postData.type === 'application/json') {
       data = JSON.parse(e.postData.contents);
+    } else if (e.parameter && e.parameter.payload) {
+      // Handle payload parameter (used to avoid CORS preflight)
+      data = JSON.parse(e.parameter.payload);
     } else {
       data = e.parameter;
     }
@@ -580,6 +623,9 @@ function submitTimeCard(e, spreadsheet) {
     var data;
     if (e.postData && e.postData.type === 'application/json') {
       data = JSON.parse(e.postData.contents);
+    } else if (e.parameter && e.parameter.payload) {
+      // Handle payload parameter (used to avoid CORS preflight)
+      data = JSON.parse(e.parameter.payload);
     } else {
       data = e.parameter;
 
@@ -603,6 +649,20 @@ function submitTimeCard(e, spreadsheet) {
           i++;
         }
         data.work_log_rows = workLogRows;
+      }
+
+      // Reconstruct truck_defects array from form data
+      // jQuery sends arrays as truck_defects[] parameter
+      if (data['truck_defects[]'] !== undefined) {
+        var truckDefectsParam = data['truck_defects[]'];
+        // Could be a single string or already an array
+        data.truck_defects = Array.isArray(truckDefectsParam) ? truckDefectsParam : [truckDefectsParam];
+      }
+
+      // Reconstruct trailer_defects array from form data
+      if (data['trailer_defects[]'] !== undefined) {
+        var trailerDefectsParam = data['trailer_defects[]'];
+        data.trailer_defects = Array.isArray(trailerDefectsParam) ? trailerDefectsParam : [trailerDefectsParam];
       }
     }
 
@@ -653,9 +713,19 @@ function submitTimeCard(e, spreadsheet) {
     // Convert work_log_rows to JSON string
     var workLogJson = JSON.stringify(data.work_log_rows || []);
 
+    // Debug logging
+    Logger.log('=== submitTimeCard Debug ===');
+    Logger.log('data.truck_defects: ' + JSON.stringify(data.truck_defects));
+    Logger.log('data[truck_defects[]]: ' + JSON.stringify(data['truck_defects[]']));
+    Logger.log('data.trailer_defects: ' + JSON.stringify(data.trailer_defects));
+    Logger.log('data[trailer_defects[]]: ' + JSON.stringify(data['trailer_defects[]']));
+
     // Convert defect arrays to comma-separated strings
     var truckDefects = Array.isArray(data.truck_defects) ? data.truck_defects.join(', ') : (data.truck_defects || '');
     var trailerDefects = Array.isArray(data.trailer_defects) ? data.trailer_defects.join(', ') : (data.trailer_defects || '');
+
+    Logger.log('truckDefects string: ' + truckDefects);
+    Logger.log('trailerDefects string: ' + trailerDefects);
 
     // Add the time card as a single row
     masterSheet.appendRow([
@@ -682,7 +752,8 @@ function submitTimeCard(e, spreadsheet) {
       data.signature || '',
       workLogJson,
       'Pending',
-      ''
+      '',  // Manager Notes
+      ''   // Invoice #
     ]);
 
     return ContentService.createTextOutput(JSON.stringify({
@@ -707,6 +778,8 @@ function approveTimeCard(e, spreadsheet) {
     var data;
     if (e.postData && e.postData.type === 'application/json') {
       data = JSON.parse(e.postData.contents);
+    } else if (e.parameter && e.parameter.payload) {
+      data = JSON.parse(e.parameter.payload);
     } else {
       data = e.parameter;
     }
@@ -735,6 +808,10 @@ function approveTimeCard(e, spreadsheet) {
       throw new Error('Time card not found with submission ID: ' + submissionId);
     }
 
+    // Convert defect arrays to comma-separated strings (handles both array and string input)
+    var truckDefects = Array.isArray(data.truck_defects) ? data.truck_defects.join(', ') : (data.truck_defects || '');
+    var trailerDefects = Array.isArray(data.trailer_defects) ? data.trailer_defects.join(', ') : (data.trailer_defects || '');
+
     // Update all editable fields in Master sheet before approving
     masterSheet.getRange(rowNumber, 3).setValue(data.employee_name || '');
     masterSheet.getRange(rowNumber, 4).setValue(data.date || '');
@@ -749,8 +826,8 @@ function approveTimeCard(e, spreadsheet) {
     masterSheet.getRange(rowNumber, 13).setValue(data.wyoming_miles || '');
     masterSheet.getRange(rowNumber, 14).setValue(data.total_miles || '');
     masterSheet.getRange(rowNumber, 15).setValue(data.fuel_gallons || '');
-    masterSheet.getRange(rowNumber, 16).setValue(data.truck_defects || '');
-    masterSheet.getRange(rowNumber, 17).setValue(data.trailer_defects || '');
+    masterSheet.getRange(rowNumber, 16).setValue(truckDefects);
+    masterSheet.getRange(rowNumber, 17).setValue(trailerDefects);
     masterSheet.getRange(rowNumber, 18).setValue(data.defect_remarks || '');
     masterSheet.getRange(rowNumber, 19).setValue(data.injured || 'no');
     masterSheet.getRange(rowNumber, 20).setValue(data.injury_details || '');
@@ -902,6 +979,8 @@ function updateTimeCard(e, spreadsheet) {
     var data;
     if (e.postData && e.postData.type === 'application/json') {
       data = JSON.parse(e.postData.contents);
+    } else if (e.parameter && e.parameter.payload) {
+      data = JSON.parse(e.parameter.payload);
     } else {
       data = e.parameter;
     }
@@ -958,6 +1037,10 @@ function updateTimeCard(e, spreadsheet) {
     // 24: Manager Notes
     // 25: Invoice #
 
+    // Convert defect arrays to comma-separated strings (handles both array and string input)
+    var truckDefects = Array.isArray(data.truck_defects) ? data.truck_defects.join(', ') : (data.truck_defects || '');
+    var trailerDefects = Array.isArray(data.trailer_defects) ? data.trailer_defects.join(', ') : (data.trailer_defects || '');
+
     masterSheet.getRange(rowNumber, 3).setValue(data.employee_name || '');
     masterSheet.getRange(rowNumber, 4).setValue(data.date || '');
     masterSheet.getRange(rowNumber, 5).setValue(data.day_of_week || '');
@@ -971,8 +1054,8 @@ function updateTimeCard(e, spreadsheet) {
     masterSheet.getRange(rowNumber, 13).setValue(data.wyoming_miles || '');
     masterSheet.getRange(rowNumber, 14).setValue(data.total_miles || '');
     masterSheet.getRange(rowNumber, 15).setValue(data.fuel_gallons || '');
-    masterSheet.getRange(rowNumber, 16).setValue(data.truck_defects || '');
-    masterSheet.getRange(rowNumber, 17).setValue(data.trailer_defects || '');
+    masterSheet.getRange(rowNumber, 16).setValue(truckDefects);
+    masterSheet.getRange(rowNumber, 17).setValue(trailerDefects);
     masterSheet.getRange(rowNumber, 18).setValue(data.defect_remarks || '');
     masterSheet.getRange(rowNumber, 19).setValue(data.injured || 'no');
     masterSheet.getRange(rowNumber, 20).setValue(data.injury_details || '');

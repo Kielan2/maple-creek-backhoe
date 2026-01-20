@@ -902,13 +902,22 @@
                     signature: $('#signature').val()
                 };
 
+                // Debug: Log the defects being sent
+                console.log('=== Employee Form Submission Debug ===');
+                console.log('truck_defects array:', formData.truck_defects);
+                console.log('trailer_defects array:', formData.trailer_defects);
+                console.log('Full formData:', formData);
+
                 // Submit to Google Sheets
                 // Use a form-encoded POST to avoid CORS preflight issues
                 $.ajax({
                     url: TIMECARD_API_URL,
                     method: 'POST',
                     data: formData,
-                    timeout: 15000
+                    timeout: 15000,
+                    beforeSend: function(xhr, settings) {
+                        console.log('AJAX request data being sent:', settings.data);
+                    }
                 })
                 .done(function(response) {
                     // Parse response if it's a string
@@ -993,10 +1002,19 @@
                 if (!dateString) return 'N/A';
 
                 try {
+                    // If the date is in YYYY-MM-DD format, parse it directly to avoid timezone issues
+                    if (typeof dateString === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+                        const [year, month, day] = dateString.split('-');
+                        return `${month}-${day}-${year}`;
+                    }
+
+                    // For other formats, use Date parsing but use UTC methods to avoid timezone shift
                     const date = new Date(dateString);
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const day = String(date.getDate()).padStart(2, '0');
-                    const year = date.getFullYear();
+                    if (isNaN(date.getTime())) return dateString;
+
+                    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+                    const day = String(date.getUTCDate()).padStart(2, '0');
+                    const year = date.getUTCFullYear();
                     return `${month}-${day}-${year}`;
                 } catch(e) {
                     return dateString;
@@ -1368,17 +1386,29 @@
 
                 // Bind inline approve buttons
                 $('.btn-approve-inline').on('click', function() {
+                    console.log('Approve button clicked');
                     const index = $(this).data('index');
+                    console.log('Index:', index);
                     const card = allTimecards[index];
+                    console.log('Card:', card);
                     const formData = collectFormData(index);
+                    console.log('Form data collected:', formData);
+                    console.log('truck_defects from form:', formData.truck_defects);
+                    console.log('trailer_defects from form:', formData.trailer_defects);
                     approveTimeCard(card, formData);
                 });
 
                 // Bind save changes buttons (for editing approved submissions)
                 $('.btn-save-changes').on('click', function() {
+                    console.log('Save button clicked');
                     const index = $(this).data('index');
+                    console.log('Index:', index);
                     const card = allTimecards[index];
+                    console.log('Card:', card);
                     const formData = collectFormData(index);
+                    console.log('Form data collected:', formData);
+                    console.log('truck_defects from form:', formData.truck_defects);
+                    console.log('trailer_defects from form:', formData.trailer_defects);
                     saveTimeCardChanges(card, formData, $(this));
                 });
 
@@ -1468,8 +1498,17 @@
 
                 try {
                     // Parse time strings (format: "HH:MM")
-                    const [inHours, inMinutes] = card.time_in.split(':').map(Number);
-                    const [outHours, outMinutes] = card.time_out.split(':').map(Number);
+                    const timeInStr = String(card.time_in);
+                    const timeOutStr = String(card.time_out);
+
+                    // Check if the time strings are in expected format
+                    if (!timeInStr.includes(':') || !timeOutStr.includes(':')) return 0;
+
+                    const [inHours, inMinutes] = timeInStr.split(':').map(Number);
+                    const [outHours, outMinutes] = timeOutStr.split(':').map(Number);
+
+                    // Validate parsed values
+                    if (isNaN(inHours) || isNaN(inMinutes) || isNaN(outHours) || isNaN(outMinutes)) return 0;
 
                     // Convert to minutes since midnight
                     const timeInMinutes = inHours * 60 + inMinutes;
@@ -1568,17 +1607,22 @@
                 $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Approving...');
 
                 // Submit approval using submission_id with token authentication
+                // Use payload parameter to avoid CORS preflight (no application/json content-type)
+                const approveData = {
+                    action: 'approve',
+                    token: sessionToken,
+                    submission_id: card.submission_id,
+                    ...formData,
+                    work_log_json: JSON.stringify(formData.work_log_rows)
+                };
+                // Debug: log the data being sent
+                console.log('Approve data being sent:', approveData);
+                console.log('truck_defects:', approveData.truck_defects);
+                console.log('trailer_defects:', approveData.trailer_defects);
                 $.ajax({
-                    url: TIMECARD_API_URL + '?action=approve',
+                    url: TIMECARD_API_URL,
                     method: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({
-                        action: 'approve',
-                        token: sessionToken,
-                        submission_id: card.submission_id,
-                        ...formData,
-                        work_log_json: JSON.stringify(formData.work_log_rows)
-                    }),
+                    data: { payload: JSON.stringify(approveData) },
                     timeout: 15000
                 })
                 .done(function(response) {
@@ -1613,17 +1657,22 @@
                 $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
 
                 // Submit update using submission_id with token authentication
+                // Use payload parameter to avoid CORS preflight (no application/json content-type)
+                const updateData = {
+                    action: 'update',
+                    token: sessionToken,
+                    submission_id: card.submission_id,
+                    ...formData,
+                    work_log_json: JSON.stringify(formData.work_log_rows)
+                };
+                // Debug: log the data being sent
+                console.log('Update data being sent:', updateData);
+                console.log('truck_defects:', updateData.truck_defects);
+                console.log('trailer_defects:', updateData.trailer_defects);
                 $.ajax({
-                    url: TIMECARD_API_URL + '?action=update',
+                    url: TIMECARD_API_URL,
                     method: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({
-                        action: 'update',
-                        token: sessionToken,
-                        submission_id: card.submission_id,
-                        ...formData,
-                        work_log_json: JSON.stringify(formData.work_log_rows)
-                    }),
+                    data: { payload: JSON.stringify(updateData) },
                     timeout: 15000
                 })
                 .done(function(response) {
