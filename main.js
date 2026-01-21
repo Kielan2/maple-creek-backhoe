@@ -292,7 +292,7 @@ $(document).ready(function() {
         gsap.set('#estimator-form', { opacity: 1, y: 0 });
     });
 
-    // Form Submission via Netlify Function
+    // Form Submission with Web3Forms
     $('#contact-form').on('submit', function(e) {
         e.preventDefault();
 
@@ -303,20 +303,12 @@ $(document).ready(function() {
         // Disable button and show loading state
         btn.text('Sending...').prop('disabled', true);
 
-        // Collect form data as JSON
-        var formData = {
-            name: form.find('[name="name"]').val(),
-            email: form.find('[name="email"]').val(),
-            message: form.find('[name="message"]').val()
-        };
+        // Submit to Web3Forms
+        var formData = new FormData(form[0]);
 
-        // Submit via Netlify Function
-        fetch('/.netlify/functions/submit-form', {
+        fetch('https://api.web3forms.com/submit', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
+            body: formData
         })
         .then(function(response) {
             return response.json();
