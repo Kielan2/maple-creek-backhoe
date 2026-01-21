@@ -590,15 +590,11 @@
             // - SHA-256 password hashing (passwords never sent to client)
             // - Session token authentication (8-hour expiration)
             // - Server-side validation for all requests
-            //
+            // API calls are proxied through Netlify Functions to keep URLs secure
             // See google-apps-script.js for backend setup instructions
-            // ============================================
-            // Production URL
-            // const API_URL = 'https://script.google.com/macros/s/AKfycbxqdSgQbMjKevcc92WebrWRj75KcR5ip7GzqYat_m0zP3yGCjzaaxTnJ2vBA1kTeWVU/exec';
-            // const TIMECARD_API_URL = 'https://script.google.com/macros/s/AKfycbxqdSgQbMjKevcc92WebrWRj75KcR5ip7GzqYat_m0zP3yGCjzaaxTnJ2vBA1kTeWVU/exec';
-            // Development URL
-            const API_URL = 'https://script.google.com/macros/s/AKfycbwwCBczpLxgf066JLMi1FvZVbcrUZF6ZB9kZS9THGvc6ZM-zMdbpFl4Gdbsy703BNAl1A/exec';
-            const TIMECARD_API_URL = 'https://script.google.com/macros/s/AKfycbwwCBczpLxgf066JLMi1FvZVbcrUZF6ZB9kZS9THGvc6ZM-zMdbpFl4Gdbsy703BNAl1A/exec';
+            // Set GOOGLE_APPS_SCRIPT_URL in Netlify environment variables
+            const API_URL = '/.netlify/functions/api-proxy';
+            const TIMECARD_API_URL = '/.netlify/functions/api-proxy';
             let employees = [];
             let sessionToken = null;
 

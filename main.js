@@ -292,10 +292,7 @@ $(document).ready(function() {
         gsap.set('#estimator-form', { opacity: 1, y: 0 });
     });
 
-    // Set Web3Forms access key from config
-    $('#web3forms-key').val(CONFIG.WEB3FORMS_ACCESS_KEY);
-
-    // Form Submission with Web3Forms
+    // Form Submission via Netlify Function
     $('#contact-form').on('submit', function(e) {
         e.preventDefault();
 
@@ -306,12 +303,20 @@ $(document).ready(function() {
         // Disable button and show loading state
         btn.text('Sending...').prop('disabled', true);
 
-        // Submit to Web3Forms
-        var formData = new FormData(form[0]);
+        // Collect form data as JSON
+        var formData = {
+            name: form.find('[name="name"]').val(),
+            email: form.find('[name="email"]').val(),
+            message: form.find('[name="message"]').val()
+        };
 
-        fetch('https://api.web3forms.com/submit', {
+        // Submit via Netlify Function
+        fetch('/.netlify/functions/submit-form', {
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
         })
         .then(function(response) {
             return response.json();
@@ -329,7 +334,6 @@ $(document).ready(function() {
 
                         // Reset form
                         form[0].reset();
-                        $('#web3forms-key').val(CONFIG.WEB3FORMS_ACCESS_KEY);
 
                         // Ensure success message is ready for animation
                         gsap.set('#contact-success', { opacity: 1, y: 0 });

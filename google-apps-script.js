@@ -629,6 +629,10 @@ function submitTimeCard(e, spreadsheet) {
     } else {
       data = e.parameter;
 
+      // IMPORTANT: e.parameter only returns the FIRST value for repeated keys
+      // Use e.parameters (plural) to get arrays for repeated parameters
+      var params = e.parameters || {};
+
       // Reconstruct work_log_rows array from form data if needed
       var workLogRows = [];
       if (data['work_log_rows[0][load_time]'] !== undefined) {
@@ -651,18 +655,15 @@ function submitTimeCard(e, spreadsheet) {
         data.work_log_rows = workLogRows;
       }
 
-      // Reconstruct truck_defects array from form data
-      // jQuery sends arrays as truck_defects[] parameter
-      if (data['truck_defects[]'] !== undefined) {
-        var truckDefectsParam = data['truck_defects[]'];
-        // Could be a single string or already an array
-        data.truck_defects = Array.isArray(truckDefectsParam) ? truckDefectsParam : [truckDefectsParam];
+      // Get truck_defects array from e.parameters (plural) - this returns actual arrays
+      // jQuery sends as truck_defects[] so we check for that key
+      if (params['truck_defects[]']) {
+        data.truck_defects = params['truck_defects[]'];
       }
 
-      // Reconstruct trailer_defects array from form data
-      if (data['trailer_defects[]'] !== undefined) {
-        var trailerDefectsParam = data['trailer_defects[]'];
-        data.trailer_defects = Array.isArray(trailerDefectsParam) ? trailerDefectsParam : [trailerDefectsParam];
+      // Get trailer_defects array from e.parameters (plural)
+      if (params['trailer_defects[]']) {
+        data.trailer_defects = params['trailer_defects[]'];
       }
     }
 
