@@ -1,3 +1,5 @@
+const https = require('https');
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return {
@@ -10,26 +12,66 @@ exports.handler = async (event) => {
     const formData = JSON.parse(event.body);
 
     // Add the access key from environment variable
-    formData.access_key = process.env.WEB3FORMS_ACCESS_KEY;
+    const accessKey = process.env.WEB3FORMS_ACCESS_KEY;
 
-    const response = await fetch('https://api.web3forms.com/submit', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(formData)
+    if (!accessKey) {
+      console.error('WEB3FORMS_ACCESS_KEY environment variable is not set');
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ success: false, message: 'Server configuration error' })
+      };
+    }
+
+    formData.access_key = accessKey;
+
+    // Make request using https module
+    const data = await new Promise((resolve, reject) => {
+      const postData = JSON.stringify(formData);
+
+      const options = {
+        hostname: 'api.web3forms.com',
+        port: 443,
+        path: '/submit',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData)
+        }
+      };
+
+      const req = https.request(options, (res) => {
+        let responseData = '';
+
+        res.on('data', (chunk) => {
+          responseData += chunk;
+        });
+
+        res.on('end', () => {
+          try {
+            resolve({ statusCode: res.statusCode, data: JSON.parse(responseData) });
+          } catch (e) {
+            resolve({ statusCode: res.statusCode, data: { success: false, message: responseData } });
+          }
+        });
+      });
+
+      req.on('error', (error) => {
+        reject(error);
+      });
+
+      req.write(postData);
+      req.end();
     });
 
-    const data = await response.json();
-
     return {
-      statusCode: response.ok ? 200 : 400,
-      body: JSON.stringify(data)
+      statusCode: data.statusCode === 200 ? 200 : 400,
+      body: JSON.stringify(data.data)
     };
   } catch (error) {
+    console.error('Submit form error:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ success: false, message: 'Server error' })
+      body: JSON.stringify({ success: false, message: 'Server error: ' + error.message })
     };
   }
 };
