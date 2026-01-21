@@ -22,11 +22,20 @@ exports.handler = async (event) => {
       };
     }
 
-    formData.access_key = accessKey;
+    // Build Web3Forms payload with required fields
+    const payload = {
+      access_key: accessKey,
+      name: formData.name || '',
+      email: formData.email || '',
+      message: formData.message || '',
+      subject: 'New Contact Form Submission - Maple Creek Backhoe'
+    };
+
+    console.log('Sending to Web3Forms:', JSON.stringify(payload));
 
     // Make request using https module
     const data = await new Promise((resolve, reject) => {
-      const postData = JSON.stringify(formData);
+      const postData = JSON.stringify(payload);
 
       const options = {
         hostname: 'api.web3forms.com',
