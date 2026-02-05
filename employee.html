@@ -1117,13 +1117,14 @@
                 $('#no-records').hide();
                 $('#timecards-container').show();
 
-                timecards.forEach((card, index) => {
+                timecards.forEach((card) => {
+                    const sid = card.submission_id;
                     const totalHours = calculateTotalHours(card);
                     const status = card.status || 'Pending';
                     const statusColor = status === 'Approved' ? '#28a745' : '#ffc107';
 
                     const approveBtn = status === 'Pending'
-                        ? `<button class="btn-primary btn-approve" data-index="${index}" style="padding: 6px 12px; margin-right: 5px;">
+                        ? `<button class="btn-primary btn-approve" data-sid="${sid}" style="padding: 6px 12px; margin-right: 5px;">
                                <i class="fas fa-check"></i> Approve
                            </button>`
                         : '';
@@ -1133,9 +1134,9 @@
                     const fieldGroupStyle = 'margin-bottom: 12px;';
 
                     const detailsRow = `
-                        <tr class="details-row" id="details-${index}" style="display: none;">
+                        <tr class="details-row" id="details-${sid}" style="display: none;">
                             <td colspan="5" style="padding: 20px; background: #f8f9fa;">
-                                <div style="max-width: 100%;" class="edit-form" data-index="${index}">
+                                <div style="max-width: 100%;" class="edit-form" data-sid="${sid}">
                                     <p style="margin: 0 0 15px 0; font-size: 12px; color: #666;"><strong>Submission ID:</strong> <span style="font-family: monospace;">${card.submission_id || 'N/A'}</span></p>
 
                                     <h4 style="margin: 0 0 15px 0; color: #333; border-bottom: 2px solid #ddd; padding-bottom: 8px;">Employee Information</h4>
@@ -1317,15 +1318,15 @@
                                     </div>
 
                                     <div style="margin-top: 20px; padding-top: 15px; border-top: 2px solid #ddd; text-align: right;">
-                                        <button class="btn-secondary" onclick="$('#details-${index}').prev().find('.btn-toggle-details').click();" style="padding: 10px 20px; margin-right: 10px;">
+                                        <button class="btn-secondary" onclick="$('#details-${sid}').prev().find('.btn-toggle-details').click();" style="padding: 10px 20px; margin-right: 10px;">
                                             Cancel
                                         </button>
                                         ${status === 'Pending' ? `
-                                            <button class="btn-primary btn-approve-inline" data-index="${index}" style="padding: 10px 20px; margin-right: 10px;">
+                                            <button class="btn-primary btn-approve-inline" data-sid="${sid}" style="padding: 10px 20px; margin-right: 10px;">
                                                 <i class="fas fa-check"></i> Approve Time Card
                                             </button>
                                         ` : ''}
-                                        <button class="btn-primary btn-save-changes" data-index="${index}" style="padding: 10px 20px; background: #28a745;">
+                                        <button class="btn-primary btn-save-changes" data-sid="${sid}" style="padding: 10px 20px; background: #28a745;">
                                             <i class="fas fa-save"></i> Save Changes
                                         </button>
                                     </div>
@@ -1345,7 +1346,7 @@
                                 </span>
                             </td>
                             <td style="padding: 12px; text-align: center;">
-                                <button class="btn-secondary btn-toggle-details" data-index="${index}" style="padding: 6px 12px;">
+                                <button class="btn-secondary btn-toggle-details" data-sid="${sid}" style="padding: 6px 12px;">
                                     <i class="fas fa-chevron-down"></i> <span>View Details</span>
                                 </button>
                             </td>
@@ -1357,8 +1358,8 @@
 
                 // Bind toggle details buttons
                 $('.btn-toggle-details').on('click', function() {
-                    const index = $(this).data('index');
-                    const $detailsRow = $(`#details-${index}`);
+                    const sid = $(this).data('sid');
+                    const $detailsRow = $(`#details-${sid}`);
                     const $icon = $(this).find('i');
                     const $text = $(this).find('span');
 
@@ -1383,11 +1384,15 @@
                 // Bind inline approve buttons
                 $('.btn-approve-inline').on('click', function() {
                     console.log('Approve button clicked');
-                    const index = $(this).data('index');
-                    console.log('Index:', index);
-                    const card = allTimecards[index];
+                    const submissionId = $(this).data('sid');
+                    console.log('Submission ID:', submissionId);
+                    const card = allTimecards.find(c => c.submission_id === submissionId);
                     console.log('Card:', card);
-                    const formData = collectFormData(index);
+                    if (!card) {
+                        alert('Error: Could not find submission. Please refresh and try again.');
+                        return;
+                    }
+                    const formData = collectFormData(submissionId);
                     console.log('Form data collected:', formData);
                     console.log('truck_defects from form:', formData.truck_defects);
                     console.log('trailer_defects from form:', formData.trailer_defects);
@@ -1397,11 +1402,15 @@
                 // Bind save changes buttons (for editing approved submissions)
                 $('.btn-save-changes').on('click', function() {
                     console.log('Save button clicked');
-                    const index = $(this).data('index');
-                    console.log('Index:', index);
-                    const card = allTimecards[index];
+                    const submissionId = $(this).data('sid');
+                    console.log('Submission ID:', submissionId);
+                    const card = allTimecards.find(c => c.submission_id === submissionId);
                     console.log('Card:', card);
-                    const formData = collectFormData(index);
+                    if (!card) {
+                        alert('Error: Could not find submission. Please refresh and try again.');
+                        return;
+                    }
+                    const formData = collectFormData(submissionId);
                     console.log('Form data collected:', formData);
                     console.log('truck_defects from form:', formData.truck_defects);
                     console.log('trailer_defects from form:', formData.trailer_defects);
@@ -1441,8 +1450,8 @@
             }
 
             // Helper function to collect all form data from an edit form
-            function collectFormData(index) {
-                const $form = $(`#details-${index} .edit-form`);
+            function collectFormData(submissionId) {
+                const $form = $(`#details-${submissionId} .edit-form`);
 
                 // Collect work log rows
                 const workLogRows = [];
@@ -1596,9 +1605,8 @@
                     return;
                 }
 
-                // Find the button and show loading state
-                const index = allTimecards.indexOf(card);
-                const $btn = $(`.btn-approve-inline[data-index="${index}"]`);
+                // Find the button and show loading state using submission_id
+                const $btn = $(`.btn-approve-inline[data-sid="${card.submission_id}"]`);
                 const originalText = $btn.html();
                 $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Approving...');
 
@@ -1717,8 +1725,8 @@
                     return;
                 }
 
-                // Show loading state
-                const $btn = $(`.btn-approve[data-index="${allTimecards.indexOf(card)}"]`);
+                // Show loading state using submission_id
+                const $btn = $(`.btn-approve[data-sid="${card.submission_id}"]`);
                 const originalText = $btn.html();
                 $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Approving...');
 
